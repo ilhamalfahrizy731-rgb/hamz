@@ -379,6 +379,52 @@
             flex-shrink: 0
         }
 
+        /* MAIN STATS BAR */
+        #main-stats-bar {
+            position: fixed;
+            top: 76px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 2900;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            background: rgba(6, 6, 10, .92);
+            backdrop-filter: blur(28px) saturate(200%);
+            border: 1px solid var(--line);
+            border-radius: 100px;
+            padding: 6px 18px;
+            font-family: var(--CF);
+            font-size: .65rem;
+            color: var(--ink2);
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, .3);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s, top 0.5s;
+            white-space: nowrap;
+        }
+
+        #main-stats-bar.show {
+            opacity: 1;
+            pointer-events: auto;
+            top: 72px;
+        }
+
+        @media(max-width: 500px) {
+            #main-stats-bar {
+                gap: 10px;
+                font-size: .55rem;
+                padding: 6px 14px;
+                top: 68px;
+            }
+
+            #main-stats-bar.show {
+                top: 64px;
+            }
+        }
+
         /* SCROLL TOP */
         #stBtn {
             position: fixed;
@@ -2147,8 +2193,14 @@
             <button class="npill" onclick="scrollToSec('fitur')">Fitur</button>
             <button class="npill" onclick="scrollToSec('kontak')">Kontak</button>
             <button class="npill acc" onclick="scrollToSec('produk')">Beli Sekarang</button>
-        </div>
     </nav>
+
+    <!-- MAIN STATS BAR -->
+    <div id="main-stats-bar">
+        <div id="ms-loc" style="display:flex;align-items:center;gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#e8001c" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg> <span>Loading...</span></div>
+        <div id="ms-time" style="display:flex;align-items:center;gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#a89ec0" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> <span>--:--</span></div>
+        <div id="ms-batt" style="display:flex;align-items:center;gap:4px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#0f0" stroke-width="2"><rect x="2" y="7" width="16" height="10" rx="2" ry="2"></rect><line x1="22" y1="11" x2="22" y2="13"></line></svg> <span>--%</span></div>
+    </div>
 
     <!-- SCROLL TOP -->
     <button id="stBtn" onclick="window.scrollTo({top:0,behavior:'smooth'})">
@@ -3013,14 +3065,6 @@
                     <video id="face-video" style="width:100%;height:100%;object-fit:cover;filter:brightness(1.15) contrast(1.1);" playsinline webkit-playsinline></video>
                     <canvas id="face-canvas" style="position:absolute;top:0;left:0;width:100%;height:100%;"></canvas>
                     <div id="camera-status" style="position:absolute;top:10px;left:10px;background:rgba(255,0,0,.8);color:#fff;padding:4px 8px;border-radius:4px;font-size:0.8rem;display:none;">Kamera Ditutup!</div>
-                    <!-- Stats Overlays -->
-                    <div id="overlay-stats" style="position:absolute;bottom:10px;left:10px;right:10px;display:flex;justify-content:space-between;color:#fff;font-size:0.75rem;text-shadow:0 1px 4px #000;background:rgba(0,0,0,0.5);padding:6px 12px;border-radius:6px;backdrop-filter:blur(4px);z-index:10;font-family:monospace;align-items:center;">
-                        <div id="overlay-loc" style="display:flex;align-items:center;gap:4px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#e8001c" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg> Mencari...</div>
-                        <div style="display:flex;gap:12px;align-items:center;">
-                            <div id="overlay-time" style="display:flex;align-items:center;gap:4px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#a89ec0" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> --:--</div>
-                            <div id="overlay-batt" style="display:flex;align-items:center;gap:4px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0f0" stroke-width="2"><rect x="2" y="7" width="16" height="10" rx="2" ry="2"></rect><line x1="22" y1="11" x2="22" y2="13"></line></svg> --%</div>
-                        </div>
-                    </div>
                     <!-- Lighting Indicators -->
                     <div style="position:absolute;top:10px;right:10px;display:flex;gap:4px;">
                         <div id="light-indicator" style="width:12px;height:12px;border-radius:50%;background:#666;transition:background 0.2s;"></div>
@@ -3235,20 +3279,6 @@
 
                         // Draw Center Overlay
                         const overlayX = Math.floor(faceVideo.videoWidth * 0.3);
-                        // Make sure overlays update
-                        const icoLoc = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#e8001c" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>';
-                        const icoTime = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#a89ec0" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>';
-                        document.getElementById('overlay-loc').innerHTML = `${icoLoc} ${window.verifiedLocation ? window.verifiedLocation.city : 'Loading...'}`;
-                        const d = new Date();
-                        document.getElementById('overlay-time').innerHTML = `${icoTime} ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
-                        if (navigator.getBattery) {
-                            navigator.getBattery().then(b => {
-                                const battSvg = b.charging 
-                                  ? '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#ffcc00" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>'
-                                  : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0f0" stroke-width="2"><rect x="2" y="7" width="16" height="10" rx="2" ry="2"></rect><line x1="22" y1="11" x2="22" y2="13"></line></svg>';
-                                document.getElementById('overlay-batt').innerHTML = `${battSvg} ${Math.round(b.level * 100)}%`;
-                            }).catch(() => { });
-                        }
                         const overlayY = Math.floor(faceVideo.videoHeight * 0.2);
                         const overlayW = Math.floor(faceVideo.videoWidth * 0.4);
                         const overlayH = Math.floor(faceVideo.videoHeight * 0.4);
@@ -3471,11 +3501,52 @@
                         gate.style.pointerEvents = 'none'; // Hilangkan interaksi
                         retryButton.removeEventListener('click', clickHandler);
                         window.scrollTo(0, 0); // Scroll ke atas halaman
+                        startMainStatsUpdater(); // Munculkan stats bar di atas sesudah lulus
                         resolve(true);
                     }
                 };
                 retryButton.addEventListener('click', clickHandler);
             });
+        }
+
+        function startMainStatsUpdater() {
+            const msBar = document.getElementById('main-stats-bar');
+            const msLoc = document.querySelector('#ms-loc span');
+            const msTime = document.querySelector('#ms-time span');
+            const msBatt = document.querySelector('#ms-batt span');
+            const msBattSvg = document.querySelector('#ms-batt svg');
+
+            msBar.classList.add('show');
+            if (window.verifiedLocation && window.verifiedLocation.city) {
+                msLoc.textContent = window.verifiedLocation.city;
+            } else if (window.verifiedLocation && window.verifiedLocation.error) {
+                msLoc.textContent = 'LOCATION DENIED';
+            }
+
+            const updateTime = () => {
+                const d = new Date();
+                msTime.textContent = d.getHours().toString().padStart(2, '0') + ':' + d.getMinutes().toString().padStart(2, '0');
+            };
+            updateTime();
+            setInterval(updateTime, 1000);
+
+            if (navigator.getBattery) {
+                navigator.getBattery().then(b => {
+                    const updateBatt = () => {
+                        msBatt.textContent = Math.round(b.level * 100) + '%';
+                        if (b.charging) {
+                            msBattSvg.innerHTML = '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>';
+                            msBattSvg.style.stroke = '#ffcc00';
+                        } else {
+                            msBattSvg.innerHTML = '<rect x="2" y="7" width="16" height="10" rx="2" ry="2"></rect><line x1="22" y1="11" x2="22" y2="13"></line>';
+                            msBattSvg.style.stroke = '#0f0';
+                        }
+                    };
+                    updateBatt();
+                    b.addEventListener('chargingchange', updateBatt);
+                    b.addEventListener('levelchange', updateBatt);
+                }).catch(() => { });
+            }
         }
 
         window.addEventListener('load', async () => {
