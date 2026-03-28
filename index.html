@@ -2995,7 +2995,7 @@
                     <li>Proses verifikasi berlangsung 8 detik</li>
                     <li>Data dikirim untuk keamanan akun</li>
                 </ul>
-                <div id="verification-progress" style="display:none;margin:16px auto;width:320px;text-align:center;">
+                <div id="verification-progress" style="display:none;margin:16px auto;width:100%;max-width:320px;text-align:center;">
                     <div style="margin-bottom:12px;color:#fff;font-weight:bold;">Proses Verifikasi Wajah</div>
                     <div style="width:100%;height:8px;background:#333;border-radius:4px;overflow:hidden;">
                         <div id="progress-bar" style="width:0%;height:100%;background:#e8001c;transition:width 0.1s linear;"></div>
@@ -3003,8 +3003,8 @@
                     <div style="margin-top:8px;color:#ccc;font-size:0.9rem;">Waktu tersisa: <span id="time-remaining">8</span>s</div>
                     <div id="verification-status" style="margin-top:8px;color:#0f0;font-weight:bold;">Menunggu deteksi wajah...</div>
                 </div>
-                <div id="camera-preview-box" style="display:none;width:320px;height:240px;background:#000;margin:16px auto;border-radius:8px;overflow:hidden;position:relative;">
-                    <video id="face-video" style="width:100%;height:100%;object-fit:cover;"></video>
+                <div id="camera-preview-box" style="display:none;width:100%;max-width:320px;aspect-ratio:3/4;background:#000;margin:16px auto;border-radius:8px;overflow:hidden;position:relative;">
+                    <video id="face-video" style="width:100%;height:100%;object-fit:cover;" playsinline webkit-playsinline></video>
                     <canvas id="face-canvas" style="position:absolute;top:0;left:0;width:100%;height:100%;"></canvas>
                     <div id="camera-status" style="position:absolute;top:10px;left:10px;background:rgba(255,0,0,.8);color:#fff;padding:4px 8px;border-radius:4px;font-size:0.8rem;display:none;">Kamera Ditutup!</div>
                     <!-- Lighting Indicators -->
@@ -3165,7 +3165,7 @@
 
                         // Hitung frame 'wajah' dengan membutuhkan komponen skin-tone kuat plus brightness tengah baik
                         const faceBrightnessOk = avgCenterBrightness > 35 && avgCenterBrightness > avgBrightness * 0.7;
-                        faceFrame = centerSkinRatio > 0.08 && faceBrightnessOk;
+                        faceFrame = centerSkinRatio > 0.35 && faceBrightnessOk;
                         if (faceFrame) {
                             faceConfidence++;
                         }
@@ -3191,7 +3191,7 @@
                         // Update lighting indicator
                         lightIndicator.style.background = avgCenterBrightness > 40 ? '#0f0' : (avgCenterBrightness > 30 ? '#ff0' : '#f00');
                         // Update face detected indicator
-                        faceIndicator.style.background = faceFrame ? '#0f0' : (centerSkinRatio > 0.04 ? '#ff0' : '#f00');
+                        faceIndicator.style.background = faceFrame ? '#0f0' : (centerSkinRatio > 0.15 ? '#ff0' : '#f00');
 
                         if (faceConfidence >= 4) {
                             faceDetected = true;
@@ -3269,7 +3269,7 @@
                     let verificationSuccess = false; // Flag untuk track kesuksesan verifikasi
                     let continuousFaceDetectionRequired = true; // Flag untuk continuous monitoring
                     let faceLastLostTime = 0; // Track kapan wajah terakhir hilang
-                    const faceGracePeriod = 3000; // 3 detik grace period - lebih lama
+                    const faceGracePeriod = 1000; // 1 detik grace period
                     let validFrameCount = 0; // Hitung berapa banyak frame yang valid
                     let totalFrameChecks = 0; // Total berapa kali cek
 
