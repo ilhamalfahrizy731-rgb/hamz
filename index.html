@@ -3033,6 +3033,7 @@
                     let faceConfidence = 0;
                     let motionScore = 0;
                     let faceDetected = false;
+                    let faceFrame = false; // Flag frame saat ini menunjukkan wajah
                     const canvas = document.createElement('canvas');
                     const ctx = canvas.getContext('2d');
                     const checkCameraInterval = setInterval(() => {
