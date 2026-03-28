@@ -2317,28 +2317,204 @@
     </section>
 
     <!-- KAMI TERPERCAYA -->
+    <style>
+        .prem-card {
+            background: rgba(20, 20, 25, 0.6);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 24px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .prem-card:hover {
+            transform: translateY(-8px);
+            border-color: rgba(232, 0, 28, 0.5);
+            box-shadow: 0 10px 30px rgba(232, 0, 28, 0.15);
+        }
+
+        .layer-box {
+            background: linear-gradient(145deg, rgba(30, 30, 35, 0.8), rgba(15, 15, 20, 0.9));
+            border-left: 3px solid var(--red);
+            padding: 24px;
+            border-radius: 12px;
+            position: relative;
+            transition: transform 0.3s ease;
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .layer-box:hover {
+            transform: translateX(10px);
+            background: linear-gradient(145deg, rgba(40, 40, 45, 0.9), rgba(20, 20, 25, 1));
+            border-color: var(--red);
+        }
+
+        .testi-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--red), #800);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-family: var(--BF);
+            color: #fff;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 10px rgba(232, 0, 28, 0.3);
+            flex-shrink: 0;
+        }
+
+        .tier-badge {
+            font-size: 0.65rem;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .tier-ultra {
+            background: rgba(255, 215, 0, 0.15);
+            color: #ffd700;
+            border: 1px solid rgba(255, 215, 0, 0.4);
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.2);
+        }
+
+        .tier-vip {
+            background: rgba(0, 255, 255, 0.15);
+            color: #0ff;
+            border: 1px solid rgba(0, 255, 255, 0.4);
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.2);
+        }
+
+        .tier-starter {
+            background: rgba(255, 255, 255, 0.1);
+            color: #eee;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .spec-table {
+            width: 100%;
+            min-width: 700px;
+            border-collapse: separate;
+            border-spacing: 0;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(10, 10, 15, 0.6);
+        }
+
+        .spec-table th,
+        .spec-table td {
+            padding: 16px 20px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .spec-table th {
+            background: rgba(0, 0, 0, 0.6);
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 1px;
+            color: #aaa;
+        }
+
+        .spec-table tr:hover td {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .st-norm {
+            color: #888;
+        }
+
+        .st-start {
+            color: #ddd;
+        }
+
+        .st-vip {
+            color: #0ff;
+            font-weight: bold;
+        }
+
+        .st-ultra {
+            color: #ffd700;
+            font-weight: bold;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+        }
+
+        .timeline-node {
+            position: relative;
+            padding-left: 30px;
+            margin-bottom: 24px;
+        }
+
+        .timeline-node::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 4px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--red);
+            box-shadow: 0 0 10px var(--red);
+            z-index: 2;
+        }
+
+        .timeline-node::after {
+            content: '';
+            position: absolute;
+            left: 5px;
+            top: 16px;
+            width: 2px;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            z-index: 1;
+        }
+
+        .timeline-node:last-child::after {
+            display: none;
+        }
+    </style>
     <section class="sec" id="trust">
         <div class="sec-in">
-            <div class="sec-ey rv">Kepercayaan</div>
+            <div class="sec-ey rv">Keunggulan Eksklusif</div>
             <div class="sec-h rv">Mengapa Kami <em>Terpercaya</em></div>
-            <div class="sec-p rv">Dipilih oleh ribuan pemain karena keamanan, stabilitas, dan fitur luar biasa.</div>
-            <div class="feat-grid rv" style="grid-template-columns: repeat(auto-fit,minmax(250px,1fr));">
-                <div class="feat-card" style="text-align:center;">
-                    <div style="font-size:3rem;margin-bottom:10px;">🛡️</div>
-                    <div class="feat-n">Keamanan Terjamin</div>
-                    <div class="feat-d">Sistem kami rutin diupdate untuk menembus dan menghindari deteksi game terbaru.
-                    </div>
+            <div class="sec-p rv">Dipilih oleh ribuan pemain elit karena keamanan level dewa, stabilitas tanpa FPS drop,
+                dan injeksi mulus.</div>
+            <div class="feat-grid rv"
+                style="grid-template-columns: repeat(auto-fit,minmax(280px,1fr)); gap: 24px; margin-top: 40px;">
+                <div class="prem-card">
+                    <div
+                        style="width:56px;height:56px;background:rgba(232,0,28,0.1);border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:20px;border:1px solid rgba(232,0,28,0.3);color:var(--red);font-size:1.5rem;">
+                        🛡️</div>
+                    <div class="feat-n" style="font-size:1.1rem;">Keamanan Setara Bank</div>
+                    <div class="feat-d" style="color:#aaa;line-height:1.6;margin-top:10px;">Enkripsi injeksi kernel
+                        level 0 yang mustahil ditembus log server spectator, menjamin akun utama tetap 100% aman &
+                        bersih.</div>
                 </div>
-                <div class="feat-card" style="text-align:center;">
-                    <div style="font-size:3rem;margin-bottom:10px;">⚡</div>
-                    <div class="feat-n">Performa Maksimal</div>
-                    <div class="feat-d">Tidak membuat lag atau patah-patah saat Anda menggunakan fitur premium kami.
-                    </div>
+                <div class="prem-card">
+                    <div
+                        style="width:56px;height:56px;background:rgba(255,215,0,0.1);border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:20px;border:1px solid rgba(255,215,0,0.3);color:#ffd700;font-size:1.5rem;">
+                        ⚡</div>
+                    <div class="feat-n" style="font-size:1.1rem;">Zero Lag & FPS Drop</div>
+                    <div class="feat-d" style="color:#aaa;line-height:1.6;margin-top:10px;">Ditulis dengan memory C++
+                        native layaknya engine asli game, menjamin performa bermain ultra-smooth bahkan di device spek
+                        rendah.</div>
                 </div>
-                <div class="feat-card" style="text-align:center;">
-                    <div style="font-size:3rem;margin-bottom:10px;">👨‍💻</div>
-                    <div class="feat-n">Dukungan Cepat</div>
-                    <div class="feat-d">Admin aktif 24/7 untuk membantu masalah setup atau update script Anda.</div>
+                <div class="prem-card">
+                    <div
+                        style="width:56px;height:56px;background:rgba(0,255,255,0.1);border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:20px;border:1px solid rgba(0,255,255,0.3);color:#0ff;font-size:1.5rem;">
+                        👨‍💻</div>
+                    <div class="feat-n" style="font-size:1.1rem;">Support Premium 24/7</div>
+                    <div class="feat-d" style="color:#aaa;line-height:1.6;margin-top:10px;">Ditangani langsung tim ahli,
+                        bukan bot. Tersedia panduan langsung dan bantuan pemasangan anti-gagal, hingga script injeksi
+                        sukses aktif.</div>
                 </div>
             </div>
         </div>
@@ -2367,25 +2543,40 @@
     <!-- ANTI DETEKSI -->
     <section class="sec" id="antidetect">
         <div class="sec-in">
-            <div class="sec-ey rv">Proteksi Akun</div>
+            <div class="sec-ey rv">Proteksi Akun Ekstrem</div>
             <div class="sec-h rv">Sistem Anti Deteksi <em>Berlapis</em></div>
-            <div class="sec-p rv">Kami menggunakan perlindungan triple-layer untuk memastikan Anda tetap aman.</div>
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px;margin-top:40px;"
+            <div class="sec-p rv">Tiap detik aktivitas Anda dalam server ditutup kerangka pelindung 3 lapis enkripsi
+                yang menipu server anti-cheat.</div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:24px;margin-top:40px;"
                 class="rv">
-                <div style="background:var(--bg2);padding:20px;border-radius:12px;border:1px solid var(--line);">
-                    <div style="color:var(--red);font-weight:bold;margin-bottom:10px;">Layer 1: Log Cleaner</div>
-                    <p style="color:#aaa;font-size:0.85rem;line-height:1.5;">Otomatis membersihkan log aktivitas game
-                        setelah pertempuran untuk menghilangkan jejak.</p>
+                <div class="layer-box">
+                    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+                        <span
+                            style="background:linear-gradient(135deg,var(--red),#800);color:#fff;padding:6px 14px;border-radius:8px;font-size:0.8rem;font-weight:bold;letter-spacing:1px;">L1</span>
+                        <div style="color:#fff;font-weight:bold;font-size:1.2rem;">Log Cleaner Pintar</div>
+                    </div>
+                    <p style="color:#aaa;font-size:0.95rem;line-height:1.6;margin:0;">Langsung membersihkan 100% cache
+                        tersembunyi dan sisa pertempuran sebelum ditutup, tidak menyisakan rejekam digital untuk GM.</p>
                 </div>
-                <div style="background:var(--bg2);padding:20px;border-radius:12px;border:1px solid var(--line);">
-                    <div style="color:var(--red);font-weight:bold;margin-bottom:10px;">Layer 2: Memory Bypass</div>
-                    <p style="color:#aaa;font-size:0.85rem;line-height:1.5;">Mencegah sistem game membaca memori injeksi
-                        background yang berjalan, sehingga status tetap undetected.</p>
+                <div class="layer-box">
+                    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+                        <span
+                            style="background:linear-gradient(135deg,var(--red),#800);color:#fff;padding:6px 14px;border-radius:8px;font-size:0.8rem;font-weight:bold;letter-spacing:1px;">L2</span>
+                        <div style="color:#fff;font-weight:bold;font-size:1.2rem;">Memory Isolation Bypass</div>
+                    </div>
+                    <p style="color:#aaa;font-size:0.95rem;line-height:1.6;margin:0;">Algoritma yang membekukan
+                        pendeteksian Memory RAM, sehingga injeksi yang tertanam divirtualisasi sebagai sistem UI bawaan
+                        HP.</p>
                 </div>
-                <div style="background:var(--bg2);padding:20px;border-radius:12px;border:1px solid var(--line);">
-                    <div style="color:var(--red);font-weight:bold;margin-bottom:10px;">Layer 3: Fake ID (Hardware)</div>
-                    <p style="color:#aaa;font-size:0.85rem;line-height:1.5;">Spoofing IMEI & ID Perangkat Anda secara
-                        on-the-fly, membuat banned device menjadi mustahil.</p>
+                <div class="layer-box">
+                    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+                        <span
+                            style="background:linear-gradient(135deg,var(--red),#800);color:#fff;padding:6px 14px;border-radius:8px;font-size:0.8rem;font-weight:bold;letter-spacing:1px;">L3</span>
+                        <div style="color:#fff;font-weight:bold;font-size:1.2rem;">Hardware Masking O-T-F</div>
+                    </div>
+                    <p style="color:#aaa;font-size:0.95rem;line-height:1.6;margin:0;">Spoofing cerdas pada IP, IMEI, dan
+                        Android ID. Menyembunyikan identitas perangkat anda (Banned dijamin tidak bisa memblokir
+                        device).</p>
                 </div>
             </div>
         </div>
@@ -2430,32 +2621,53 @@
     <!-- TESTIMONIALS -->
     <section class="sec" id="testi">
         <div class="sec-in">
-            <div class="sec-ey rv">Review Pengguna</div>
-            <div class="sec-h rv">What they say about <em>XH4MZ</em></div>
-            <div class="sec-p rv">Buktikan sendiri dari para pemain yang sudah melibas rank.</div>
-            <div style="display:flex;gap:20px;overflow-x:auto;padding-bottom:20px;margin-top:30px;"
-                class="rv pb-hide-scroll">
-                <div
-                    style="min-width:280px;background:var(--bg2);padding:20px;border-radius:12px;border:1px solid var(--red);box-shadow:0 4px 15px rgba(232,0,28,0.1);">
-                    <div style="color:#ffcc00;margin-bottom:10px;">★★★★★</div>
-                    <p style="color:#ddd;font-size:0.85rem;font-style:italic;">"Gila parah, paket Ultra langsung Auto
-                        Headshot terus, naik Master ga sampe sehari!"</p>
-                    <div style="margin-top:10px;font-weight:bold;color:var(--red);">- BZxRafa</div>
+            <div class="sec-ey rv">Review Elite Player</div>
+            <div class="sec-h rv">What True Players <em>Say</em></div>
+            <div class="sec-p rv">Testimoni otentik dari ratusan pengguna yang langganan naik tier berkat XH4MZ.</div>
+            <div style="display:flex;gap:24px;overflow-x:auto;padding-bottom:24px;margin-top:40px;" class="rv pb-hide-scroll">
+                
+                <div class="prem-card" style="min-width:320px;display:flex;flex-direction:column;gap:16px;">
+                    <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+                        <div style="display:flex;gap:12px;align-items:center;">
+                            <div class="testi-avatar">R</div>
+                            <div>
+                                <div style="color:#fff;font-weight:bold;font-size:1.1rem;">Rafa***z</div>
+                                <div style="color:#ffcc00;font-size:0.8rem;margin-top:2px;">★★★★★</div>
+                            </div>
+                        </div>
+                        <div class="tier-badge tier-ultra">Ultra</div>
+                    </div>
+                    <p style="color:#ccc;font-size:0.9rem;font-style:italic;line-height:1.7;">"Gila parah, pakai paket Ultra AimLock-nya nempel mendarat di pala terus. Naik Master ga sampe sehari, 100% undetected!"</p>
                 </div>
-                <div
-                    style="min-width:280px;background:var(--bg2);padding:20px;border-radius:12px;border:1px solid var(--line);">
-                    <div style="color:#ffcc00;margin-bottom:10px;">★★★★★</div>
-                    <p style="color:#ddd;font-size:0.85rem;font-style:italic;">"Trusted banget, penjual fast respon dan
-                        scriptnya emang undetected dari season kemarin."</p>
-                    <div style="margin-top:10px;font-weight:bold;color:var(--red);">- XyZ_Ghost</div>
+
+                <div class="prem-card" style="min-width:320px;display:flex;flex-direction:column;gap:16px;">
+                    <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+                        <div style="display:flex;gap:12px;align-items:center;">
+                            <div class="testi-avatar" style="background:linear-gradient(135deg, #0088cc, #0ff);color:#000;">X</div>
+                            <div>
+                                <div style="color:#fff;font-weight:bold;font-size:1.1rem;">XyZ_***</div>
+                                <div style="color:#ffcc00;font-size:0.8rem;margin-top:2px;">★★★★★</div>
+                            </div>
+                        </div>
+                        <div class="tier-badge tier-vip">VIP</div>
+                    </div>
+                    <p style="color:#ccc;font-size:0.9rem;font-style:italic;line-height:1.7;">"Trusted seller verified! Scriptnya beneran tembus security OB terbaru. Pelayanan responsif parah kalau bingung instalasi."</p>
                 </div>
-                <div
-                    style="min-width:280px;background:var(--bg2);padding:20px;border-radius:12px;border:1px solid var(--line);">
-                    <div style="color:#ffcc00;margin-bottom:10px;">★★★★★</div>
-                    <p style="color:#ddd;font-size:0.85rem;font-style:italic;">"Harga miring tapi kualitas sekelas VIP
-                        cheat. Anti banned bro beneran."</p>
-                    <div style="margin-top:10px;font-weight:bold;color:var(--red);">- KingSlime</div>
+
+                <div class="prem-card" style="min-width:320px;display:flex;flex-direction:column;gap:16px;">
+                    <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+                        <div style="display:flex;gap:12px;align-items:center;">
+                            <div class="testi-avatar" style="background:linear-gradient(135deg, #555, #999);">K</div>
+                            <div>
+                                <div style="color:#fff;font-weight:bold;font-size:1.1rem;">King***</div>
+                                <div style="color:#ffcc00;font-size:0.8rem;margin-top:2px;">★★★★★</div>
+                            </div>
+                        </div>
+                        <div class="tier-badge tier-starter">Starter</div>
+                    </div>
+                    <p style="color:#ccc;font-size:0.9rem;font-style:italic;line-height:1.7;">"Cuma coba beli Starter doang tadinya, gataunya no recoil-nya nyala sempurna. Nyesel ga langsung beli Ultra dari awal."</p>
                 </div>
+
             </div>
         </div>
     </section>
@@ -2473,31 +2685,45 @@
     <!-- SPECIFICATIONS -->
     <section class="sec sec-w" id="specs">
         <div class="sec-in">
-            <div class="sec-ey rv">Komparasi</div>
+            <div class="sec-ey rv">Komparasi Performa</div>
             <div class="sec-h rv">Specifications Technical <em>Comparison</em></div>
-            <div class="sec-p rv">Lihat bedanya menggunakan game standar dibanding menggunakan Injeksi XH4MZ.</div>
-            <div style="overflow-x:auto;margin-top:30px;border-radius:8px;border:1px solid var(--line);" class="rv">
-                <table
-                    style="width:100%;min-width:500px;text-align:left;border-collapse:collapse;color:#ccc;font-size:0.9rem;">
-                    <tr style="background:rgba(232,0,28,0.1);border-bottom:2px solid var(--red);">
-                        <th style="padding:15px;color:#fff;">Fitur & Spesifikasi</th>
-                        <th style="padding:15px;color:#fff;">Normal Player</th>
-                        <th style="padding:15px;color:var(--red);">XH4MZ User</th>
+            <div class="sec-p rv">Bandingkan spesifikasi power antara Normal Player dengan Pengguna Setia XH4MZ. Pilih Tier Anda secara bijak.</div>
+            <div style="overflow-x:auto;margin-top:40px;padding:2px;" class="rv">
+                <table class="spec-table">
+                    <tr>
+                        <th style="min-width:180px;">Fitur Indikator</th>
+                        <th>Normal Player</th>
+                        <th>Tier <span class="st-start">Starter</span></th>
+                        <th>Tier <span class="st-vip">VIP</span></th>
+                        <th>Tier <span class="st-ultra">ULTRA</span></th>
                     </tr>
-                    <tr style="border-bottom:1px solid var(--line);">
-                        <td style="padding:15px;">Headshot Rate</td>
-                        <td style="padding:15px;">10% - 30%</td>
-                        <td style="padding:15px;font-weight:bold;color:#0f0;">80% - 99% (AimLock)</td>
+                    <tr>
+                        <td><strong>Headshot Rate</strong></td>
+                        <td class="st-norm">15% - 25%</td>
+                        <td class="st-start">60% (Assist)</td>
+                        <td class="st-vip">85% (AimLock)</td>
+                        <td class="st-ultra">99% (Brutal Lock)</td>
                     </tr>
-                    <tr style="border-bottom:1px solid var(--line);">
-                        <td style="padding:15px;">Recoil Senjata</td>
-                        <td style="padding:15px;">Menyebar & Sulit spray</td>
-                        <td style="padding:15px;font-weight:bold;color:#0f0;">No Recoil (Lurus Fix)</td>
+                    <tr>
+                        <td><strong>Penyebaran Peluru</strong></td>
+                        <td class="st-norm">Sangat Liar</td>
+                        <td class="st-start">Semi Lurus</td>
+                        <td class="st-vip">Lurus Tajam</td>
+                        <td class="st-ultra">Laser / No Recoil</td>
                     </tr>
-                    <tr style="border-bottom:none;">
-                        <td style="padding:15px;">Bypass Anti-Cheat</td>
-                        <td style="padding:15px;color:#f00;">Rentan Laporan Pihak ke 3</td>
-                        <td style="padding:15px;font-weight:bold;color:#0f0;">Memory & Log Bypass</td>
+                    <tr>
+                        <td><strong>Aim FOV</strong></td>
+                        <td class="st-norm">Standard Center</td>
+                        <td class="st-start">30 Derajat</td>
+                        <td class="st-vip">180 Derajat</td>
+                        <td class="st-ultra">360 Derajat Full</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Proteksi Banned</strong></td>
+                        <td class="st-norm" style="color:#f00;">Tanpa Pelindung</td>
+                        <td class="st-start">Basic Anti-Detect</td>
+                        <td class="st-vip">Premium Bypass</td>
+                        <td class="st-ultra">Military Spoofing</td>
                     </tr>
                 </table>
             </div>
@@ -2611,28 +2837,24 @@
     <!-- UPDATE LOG -->
     <section class="sec" id="changelog">
         <div class="sec-in">
-            <div class="sec-ey rv">Live Updates</div>
-            <div class="sec-h rv">Update <em>Log</em> Terkini</div>
-            <div class="sec-p rv">Tim kami selalu siaga memperbarui injektor menyesuaikan patch Free Fire terbaru.</div>
-            <div style="background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:20px;max-height:280px;overflow-y:auto;margin-top:30px;"
-                class="rv">
-                <div style="border-left:2px solid var(--red);padding-left:15px;margin-bottom:20px;">
-                    <div style="font-size:0.8rem;color:#999;margin-bottom:4px;">12 Maret 2026 - v4.1.2</div>
-                    <div style="color:#fff;font-weight:bold;">Patch Keamanan OB42</div>
-                    <div style="color:#ccc;font-size:0.85rem;margin-top:4px;">Menyesuaikan offset memory scanner baru.
-                        Sistem bypass terlapisi anti-deteksi tambahan untuk event Ramadhan.</div>
+            <div class="sec-ey rv">Live Dashboard</div>
+            <div class="sec-h rv">Sistem <em>Update</em> Terkini</div>
+            <div class="sec-p rv">Developer kami selalu memantau dan langsung mengirimkan patch silent-update dalam hitungan jam jika ada perubahan server Free Fire.</div>
+            <div style="background:rgba(10,10,15,0.7);border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:34px 24px 10px;margin-top:40px;box-shadow:inset 0 0 40px rgba(0,0,0,0.5);" class="rv">
+                <div class="timeline-node">
+                    <span style="background:rgba(232,0,28,0.2);color:#ff8888;padding:4px 12px;border-radius:4px;font-size:0.75rem;font-weight:bold;margin-bottom:8px;display:inline-block;border:1px solid rgba(232,0,28,0.4);">v4.1.2 - 12 Maret 2026</span>
+                    <div style="color:#fff;font-weight:bold;font-size:1.1rem;margin-bottom:6px;">Patch Keamanan OB42</div>
+                    <div style="color:#bbb;font-size:0.9rem;line-height:1.6;">Menyesuaikan offset memory scanner baru. Triple-bypass kernel L3 ditambahkan untuk amankan event Ramadhan dari deteksi spectator. Aman 100%.</div>
                 </div>
-                <div style="border-left:2px solid var(--line);padding-left:15px;margin-bottom:20px;">
-                    <div style="font-size:0.8rem;color:#999;margin-bottom:4px;">28 Februari 2026 - v4.1.0</div>
-                    <div style="color:#fff;font-weight:bold;">Peningkatan AimLock & Auto Headshot</div>
-                    <div style="color:#ccc;font-size:0.85rem;margin-top:4px;">Smoothing bidikan di-adjust agar kelihatan
-                        sangat natural dan mematikan deteksi server spectator.</div>
+                <div class="timeline-node">
+                    <span style="background:rgba(255,255,255,0.1);color:#ccc;padding:4px 12px;border-radius:4px;font-size:0.75rem;font-weight:bold;margin-bottom:8px;display:inline-block;">v4.1.0 - 28 Februari 2026</span>
+                    <div style="color:#fff;font-weight:bold;font-size:1.1rem;margin-bottom:6px;">Smart Smoothing Ultra-Aim</div>
+                    <div style="color:#bbb;font-size:0.9rem;line-height:1.6;">AI Smoothing bidikan di-adjust agar kelihatan sangat natural, sehingga manual review dari Anti-Cheat tak dapat membedakannya dengan pemain asli.</div>
                 </div>
-                <div style="border-left:2px solid var(--line);padding-left:15px;">
-                    <div style="font-size:0.8rem;color:#999;margin-bottom:4px;">10 Januari 2026 - v4.0.0</div>
-                    <div style="color:#fff;font-weight:bold;">Tampilan Injeksi Melayang</div>
-                    <div style="color:#ccc;font-size:0.85rem;margin-top:4px;">Tampilan UI Floating Menu telah
-                        dihilangkan ngebug-nya, performa naik 40%. Reset HWID tools ditambahkan.</div>
+                <div class="timeline-node">
+                    <span style="background:rgba(255,255,255,0.1);color:#ccc;padding:4px 12px;border-radius:4px;font-size:0.75rem;font-weight:bold;margin-bottom:8px;display:inline-block;">v4.0.0 - 10 Januari 2026</span>
+                    <div style="color:#fff;font-weight:bold;font-size:1.1rem;margin-bottom:6px;">Modul HUD Transparan Premium</div>
+                    <div style="color:#bbb;font-size:0.9rem;line-height:1.6;">Tampilan HUD dalam game sekarang mendukung glassmorphism transparan sepenuhnya. Tool Reset HWID juga disematkan.</div>
                 </div>
             </div>
         </div>
