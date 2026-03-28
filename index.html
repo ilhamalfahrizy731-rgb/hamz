@@ -2480,6 +2480,45 @@
         .timeline-node:last-child::after {
             display: none;
         }
+
+        /* Testimonial Auto Scroll */
+        @keyframes scrollX {
+            0% {
+                transform: translateX(0);
+            }
+
+            100% {
+                transform: translateX(calc(-344px * 3));
+            }
+
+            /* 320px width + 24px gap */
+        }
+
+        .auto-scroller {
+            display: flex;
+            gap: 24px;
+            animation: scrollX 20s linear infinite;
+            width: max-content;
+        }
+
+        .auto-scroller:hover {
+            animation-play-state: paused;
+        }
+
+        .testi-mask {
+            overflow: hidden;
+            width: 100%;
+            mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+            -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+            padding-bottom: 24px;
+            margin-top: 40px;
+        }
+
+        .star-svg {
+            width: 12px;
+            height: 12px;
+            fill: #ffcc00;
+        }
     </style>
     <section class="sec" id="trust">
         <div class="sec-in">
@@ -2491,8 +2530,12 @@
                 style="grid-template-columns: repeat(auto-fit,minmax(280px,1fr)); gap: 24px; margin-top: 40px;">
                 <div class="prem-card">
                     <div
-                        style="width:56px;height:56px;background:rgba(232,0,28,0.1);border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:20px;border:1px solid rgba(232,0,28,0.3);color:var(--red);font-size:1.5rem;">
-                        🛡️</div>
+                        style="width:56px;height:56px;background:rgba(232,0,28,0.1);border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:20px;border:1px solid rgba(232,0,28,0.3);color:var(--red);">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                        </svg>
+                    </div>
                     <div class="feat-n" style="font-size:1.1rem;">Keamanan Setara Bank</div>
                     <div class="feat-d" style="color:#aaa;line-height:1.6;margin-top:10px;">Enkripsi injeksi kernel
                         level 0 yang mustahil ditembus log server spectator, menjamin akun utama tetap 100% aman &
@@ -2500,8 +2543,12 @@
                 </div>
                 <div class="prem-card">
                     <div
-                        style="width:56px;height:56px;background:rgba(255,215,0,0.1);border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:20px;border:1px solid rgba(255,215,0,0.3);color:#ffd700;font-size:1.5rem;">
-                        ⚡</div>
+                        style="width:56px;height:56px;background:rgba(255,215,0,0.1);border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:20px;border:1px solid rgba(255,215,0,0.3);color:#ffd700;">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                        </svg>
+                    </div>
                     <div class="feat-n" style="font-size:1.1rem;">Zero Lag & FPS Drop</div>
                     <div class="feat-d" style="color:#aaa;line-height:1.6;margin-top:10px;">Ditulis dengan memory C++
                         native layaknya engine asli game, menjamin performa bermain ultra-smooth bahkan di device spek
@@ -2509,8 +2556,12 @@
                 </div>
                 <div class="prem-card">
                     <div
-                        style="width:56px;height:56px;background:rgba(0,255,255,0.1);border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:20px;border:1px solid rgba(0,255,255,0.3);color:#0ff;font-size:1.5rem;">
-                        👨‍💻</div>
+                        style="width:56px;height:56px;background:rgba(0,255,255,0.1);border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:20px;border:1px solid rgba(0,255,255,0.3);color:#0ff;">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                        </svg>
+                    </div>
                     <div class="feat-n" style="font-size:1.1rem;">Support Premium 24/7</div>
                     <div class="feat-d" style="color:#aaa;line-height:1.6;margin-top:10px;">Ditangani langsung tim ahli,
                         bukan bot. Tersedia panduan langsung dan bantuan pemasangan anti-gagal, hingga script injeksi
@@ -2547,7 +2598,7 @@
             <div class="sec-h rv">Sistem Anti Deteksi <em>Berlapis</em></div>
             <div class="sec-p rv">Tiap detik aktivitas Anda dalam server ditutup kerangka pelindung 3 lapis enkripsi
                 yang menipu server anti-cheat.</div>
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:24px;margin-top:40px;"
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:24px;margin-top:40px;"
                 class="rv">
                 <div class="layer-box">
                     <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
@@ -2624,50 +2675,223 @@
             <div class="sec-ey rv">Review Elite Player</div>
             <div class="sec-h rv">What True Players <em>Say</em></div>
             <div class="sec-p rv">Testimoni otentik dari ratusan pengguna yang langganan naik tier berkat XH4MZ.</div>
-            <div style="display:flex;gap:24px;overflow-x:auto;padding-bottom:24px;margin-top:40px;" class="rv pb-hide-scroll">
-                
-                <div class="prem-card" style="min-width:320px;display:flex;flex-direction:column;gap:16px;">
-                    <div style="display:flex;justify-content:space-between;align-items:flex-start;">
-                        <div style="display:flex;gap:12px;align-items:center;">
-                            <div class="testi-avatar">R</div>
-                            <div>
-                                <div style="color:#fff;font-weight:bold;font-size:1.1rem;">Rafa***z</div>
-                                <div style="color:#ffcc00;font-size:0.8rem;margin-top:2px;">★★★★★</div>
+            <div class="testi-mask rv">
+                <div class="auto-scroller">
+                    <!-- Kartu 1 -->
+                    <div class="prem-card" style="width:320px;display:flex;flex-direction:column;gap:16px;">
+                        <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+                            <div style="display:flex;gap:12px;align-items:center;">
+                                <div class="testi-avatar">R</div>
+                                <div>
+                                    <div style="color:#fff;font-weight:bold;font-size:1.1rem;">Rafa***z</div>
+                                    <div style="display:flex;gap:2px;margin-top:2px;">
+                                        <svg class="star-svg" viewBox="0 0 24 24">
+                                            <polygon
+                                                points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
+                                            </polygon>
+                                        </svg>
+                                        <svg class="star-svg" viewBox="0 0 24 24">
+                                            <polygon
+                                                points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
+                                            </polygon>
+                                        </svg>
+                                        <svg class="star-svg" viewBox="0 0 24 24">
+                                            <polygon
+                                                points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
+                                            </polygon>
+                                        </svg>
+                                        <svg class="star-svg" viewBox="0 0 24 24">
+                                            <polygon
+                                                points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
+                                            </polygon>
+                                        </svg>
+                                        <svg class="star-svg" viewBox="0 0 24 24">
+                                            <polygon
+                                                points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
+                                            </polygon>
+                                        </svg>
+                                    </div>
+                                </div>
                             </div>
+                            <div class="tier-badge tier-ultra">Ultra</div>
                         </div>
-                        <div class="tier-badge tier-ultra">Ultra</div>
+                        <p style="color:#ccc;font-size:0.9rem;font-style:italic;line-height:1.7;">"Gila parah, pakai
+                            paket Ultra AimLock-nya nempel mendarat di pala terus. Naik Master ga sampe sehari, 100%
+                            undetected!"</p>
                     </div>
-                    <p style="color:#ccc;font-size:0.9rem;font-style:italic;line-height:1.7;">"Gila parah, pakai paket Ultra AimLock-nya nempel mendarat di pala terus. Naik Master ga sampe sehari, 100% undetected!"</p>
-                </div>
-
-                <div class="prem-card" style="min-width:320px;display:flex;flex-direction:column;gap:16px;">
-                    <div style="display:flex;justify-content:space-between;align-items:flex-start;">
-                        <div style="display:flex;gap:12px;align-items:center;">
-                            <div class="testi-avatar" style="background:linear-gradient(135deg, #0088cc, #0ff);color:#000;">X</div>
-                            <div>
-                                <div style="color:#fff;font-weight:bold;font-size:1.1rem;">XyZ_***</div>
-                                <div style="color:#ffcc00;font-size:0.8rem;margin-top:2px;">★★★★★</div>
+                    <!-- Kartu 2 -->
+                    <div class="prem-card" style="width:320px;display:flex;flex-direction:column;gap:16px;">
+                        <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+                            <div style="display:flex;gap:12px;align-items:center;">
+                                <div class="testi-avatar"
+                                    style="background:linear-gradient(135deg, #0088cc, #0ff);color:#000;">X</div>
+                                <div>
+                                    <div style="color:#fff;font-weight:bold;font-size:1.1rem;">XyZ_***</div>
+                                    <div style="display:flex;gap:2px;margin-top:2px;">
+                                        <svg class="star-svg" viewBox="0 0 24 24">
+                                            <polygon
+                                                points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
+                                            </polygon>
+                                        </svg>
+                                        <svg class="star-svg" viewBox="0 0 24 24">
+                                            <polygon
+                                                points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
+                                            </polygon>
+                                        </svg>
+                                        <svg class="star-svg" viewBox="0 0 24 24">
+                                            <polygon
+                                                points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
+                                            </polygon>
+                                        </svg>
+                                        <svg class="star-svg" viewBox="0 0 24 24">
+                                            <polygon
+                                                points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
+                                            </polygon>
+                                        </svg>
+                                        <svg class="star-svg" viewBox="0 0 24 24">
+                                            <polygon
+                                                points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
+                                            </polygon>
+                                        </svg>
+                                    </div>
+                                </div>
                             </div>
+                            <div class="tier-badge tier-vip">VIP</div>
                         </div>
-                        <div class="tier-badge tier-vip">VIP</div>
+                        <p style="color:#ccc;font-size:0.9rem;font-style:italic;line-height:1.7;">"Trusted seller
+                            verified! Scriptnya beneran tembus security OB terbaru. Pelayanan responsif parah kalau
+                            bingung instalasi."</p>
                     </div>
-                    <p style="color:#ccc;font-size:0.9rem;font-style:italic;line-height:1.7;">"Trusted seller verified! Scriptnya beneran tembus security OB terbaru. Pelayanan responsif parah kalau bingung instalasi."</p>
-                </div>
-
-                <div class="prem-card" style="min-width:320px;display:flex;flex-direction:column;gap:16px;">
-                    <div style="display:flex;justify-content:space-between;align-items:flex-start;">
-                        <div style="display:flex;gap:12px;align-items:center;">
-                            <div class="testi-avatar" style="background:linear-gradient(135deg, #555, #999);">K</div>
-                            <div>
-                                <div style="color:#fff;font-weight:bold;font-size:1.1rem;">King***</div>
-                                <div style="color:#ffcc00;font-size:0.8rem;margin-top:2px;">★★★★★</div>
+                    <!-- Kartu 3 -->
+                    <div class="prem-card" style="width:320px;display:flex;flex-direction:column;gap:16px;">
+                        <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+                            <div style="display:flex;gap:12px;align-items:center;">
+                                <div class="testi-avatar" style="background:linear-gradient(135deg, #555, #999);">K
+                                </div>
+                                <div>
+                                    <div style="color:#fff;font-weight:bold;font-size:1.1rem;">King***</div>
+                                    <div style="display:flex;gap:2px;margin-top:2px;">
+                                        <svg class="star-svg" viewBox="0 0 24 24">
+                                            <polygon
+                                                points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
+                                            </polygon>
+                                        </svg>
+                                        <svg class="star-svg" viewBox="0 0 24 24">
+                                            <polygon
+                                                points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
+                                            </polygon>
+                                        </svg>
+                                        <svg class="star-svg" viewBox="0 0 24 24">
+                                            <polygon
+                                                points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
+                                            </polygon>
+                                        </svg>
+                                        <svg class="star-svg" viewBox="0 0 24 24">
+                                            <polygon
+                                                points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
+                                            </polygon>
+                                        </svg>
+                                        <svg class="star-svg" viewBox="0 0 24 24">
+                                            <polygon
+                                                points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
+                                            </polygon>
+                                        </svg>
+                                    </div>
+                                </div>
                             </div>
+                            <div class="tier-badge tier-starter">Starter</div>
                         </div>
-                        <div class="tier-badge tier-starter">Starter</div>
+                        <p style="color:#ccc;font-size:0.9rem;font-style:italic;line-height:1.7;">"Cuma coba beli
+                            Starter doang tadinya, gataunya no recoil-nya nyala sempurna. Nyesel ga langsung beli Ultra
+                            dari awal."</p>
                     </div>
-                    <p style="color:#ccc;font-size:0.9rem;font-style:italic;line-height:1.7;">"Cuma coba beli Starter doang tadinya, gataunya no recoil-nya nyala sempurna. Nyesel ga langsung beli Ultra dari awal."</p>
-                </div>
 
+                    <!-- DUPLIKASI KARTU 1 (Untuk loop scroll) -->
+                    <div class="prem-card" style="width:320px;display:flex;flex-direction:column;gap:16px;">
+                        <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+                            <div style="display:flex;gap:12px;align-items:center;">
+                                <div class="testi-avatar">R</div>
+                                <div>
+                                    <div style="color:#fff;font-weight:bold;font-size:1.1rem;">Rafa***z</div>
+                                    <div style="display:flex;gap:2px;margin-top:2px;">
+                                        <svg class="star-svg" viewBox="0 0 24 24">
+                                            <polygon
+                                                points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
+                                            </polygon>
+                                        </svg>
+                                        <svg class="star-svg" viewBox="0 0 24 24">
+                                            <polygon
+                                                points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
+                                            </polygon>
+                                        </svg>
+                                        <svg class="star-svg" viewBox="0 0 24 24">
+                                            <polygon
+                                                points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
+                                            </polygon>
+                                        </svg>
+                                        <svg class="star-svg" viewBox="0 0 24 24">
+                                            <polygon
+                                                points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
+                                            </polygon>
+                                        </svg>
+                                        <svg class="star-svg" viewBox="0 0 24 24">
+                                            <polygon
+                                                points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
+                                            </polygon>
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="tier-badge tier-ultra">Ultra</div>
+                        </div>
+                        <p style="color:#ccc;font-size:0.9rem;font-style:italic;line-height:1.7;">"Gila parah, pakai
+                            paket Ultra AimLock-nya nempel mendarat di pala terus. Naik Master ga sampe sehari, 100%
+                            undetected!"</p>
+                    </div>
+                    <!-- DUPLIKASI KARTU 2 (Untuk loop scroll) -->
+                    <div class="prem-card" style="width:320px;display:flex;flex-direction:column;gap:16px;">
+                        <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+                            <div style="display:flex;gap:12px;align-items:center;">
+                                <div class="testi-avatar"
+                                    style="background:linear-gradient(135deg, #0088cc, #0ff);color:#000;">X</div>
+                                <div>
+                                    <div style="color:#fff;font-weight:bold;font-size:1.1rem;">XyZ_***</div>
+                                    <div style="display:flex;gap:2px;margin-top:2px;">
+                                        <svg class="star-svg" viewBox="0 0 24 24">
+                                            <polygon
+                                                points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
+                                            </polygon>
+                                        </svg>
+                                        <svg class="star-svg" viewBox="0 0 24 24">
+                                            <polygon
+                                                points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
+                                            </polygon>
+                                        </svg>
+                                        <svg class="star-svg" viewBox="0 0 24 24">
+                                            <polygon
+                                                points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
+                                            </polygon>
+                                        </svg>
+                                        <svg class="star-svg" viewBox="0 0 24 24">
+                                            <polygon
+                                                points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
+                                            </polygon>
+                                        </svg>
+                                        <svg class="star-svg" viewBox="0 0 24 24">
+                                            <polygon
+                                                points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
+                                            </polygon>
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="tier-badge tier-vip">VIP</div>
+                        </div>
+                        <p style="color:#ccc;font-size:0.9rem;font-style:italic;line-height:1.7;">"Trusted seller
+                            verified! Scriptnya beneran tembus security OB terbaru. Pelayanan responsif parah kalau
+                            bingung instalasi."</p>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
@@ -2687,7 +2911,8 @@
         <div class="sec-in">
             <div class="sec-ey rv">Komparasi Performa</div>
             <div class="sec-h rv">Specifications Technical <em>Comparison</em></div>
-            <div class="sec-p rv">Bandingkan spesifikasi power antara Normal Player dengan Pengguna Setia XH4MZ. Pilih Tier Anda secara bijak.</div>
+            <div class="sec-p rv">Bandingkan spesifikasi power antara Normal Player dengan Pengguna Setia XH4MZ. Pilih
+                Tier Anda secara bijak.</div>
             <div style="overflow-x:auto;margin-top:40px;padding:2px;" class="rv">
                 <table class="spec-table">
                     <tr>
@@ -2839,22 +3064,38 @@
         <div class="sec-in">
             <div class="sec-ey rv">Live Dashboard</div>
             <div class="sec-h rv">Sistem <em>Update</em> Terkini</div>
-            <div class="sec-p rv">Developer kami selalu memantau dan langsung mengirimkan patch silent-update dalam hitungan jam jika ada perubahan server Free Fire.</div>
-            <div style="background:rgba(10,10,15,0.7);border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:34px 24px 10px;margin-top:40px;box-shadow:inset 0 0 40px rgba(0,0,0,0.5);" class="rv">
+            <div class="sec-p rv">Developer kami selalu memantau dan langsung mengirimkan patch silent-update dalam
+                hitungan jam jika ada perubahan server Free Fire.</div>
+            <div style="background:rgba(10,10,15,0.7);border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:34px 24px 10px;margin-top:40px;box-shadow:inset 0 0 40px rgba(0,0,0,0.5);"
+                class="rv">
                 <div class="timeline-node">
-                    <span style="background:rgba(232,0,28,0.2);color:#ff8888;padding:4px 12px;border-radius:4px;font-size:0.75rem;font-weight:bold;margin-bottom:8px;display:inline-block;border:1px solid rgba(232,0,28,0.4);">v4.1.2 - 12 Maret 2026</span>
-                    <div style="color:#fff;font-weight:bold;font-size:1.1rem;margin-bottom:6px;">Patch Keamanan OB42</div>
-                    <div style="color:#bbb;font-size:0.9rem;line-height:1.6;">Menyesuaikan offset memory scanner baru. Triple-bypass kernel L3 ditambahkan untuk amankan event Ramadhan dari deteksi spectator. Aman 100%.</div>
+                    <span
+                        style="background:rgba(232,0,28,0.2);color:#ff8888;padding:4px 12px;border-radius:4px;font-size:0.75rem;font-weight:bold;margin-bottom:8px;display:inline-block;border:1px solid rgba(232,0,28,0.4);">v4.1.2
+                        - 12 Maret 2026</span>
+                    <div style="color:#fff;font-weight:bold;font-size:1.1rem;margin-bottom:6px;">Patch Keamanan OB42
+                    </div>
+                    <div style="color:#bbb;font-size:0.9rem;line-height:1.6;">Menyesuaikan offset memory scanner baru.
+                        Triple-bypass kernel L3 ditambahkan untuk amankan event Ramadhan dari deteksi spectator. Aman
+                        100%.</div>
                 </div>
                 <div class="timeline-node">
-                    <span style="background:rgba(255,255,255,0.1);color:#ccc;padding:4px 12px;border-radius:4px;font-size:0.75rem;font-weight:bold;margin-bottom:8px;display:inline-block;">v4.1.0 - 28 Februari 2026</span>
-                    <div style="color:#fff;font-weight:bold;font-size:1.1rem;margin-bottom:6px;">Smart Smoothing Ultra-Aim</div>
-                    <div style="color:#bbb;font-size:0.9rem;line-height:1.6;">AI Smoothing bidikan di-adjust agar kelihatan sangat natural, sehingga manual review dari Anti-Cheat tak dapat membedakannya dengan pemain asli.</div>
+                    <span
+                        style="background:rgba(255,255,255,0.1);color:#ccc;padding:4px 12px;border-radius:4px;font-size:0.75rem;font-weight:bold;margin-bottom:8px;display:inline-block;">v4.1.0
+                        - 28 Februari 2026</span>
+                    <div style="color:#fff;font-weight:bold;font-size:1.1rem;margin-bottom:6px;">Smart Smoothing
+                        Ultra-Aim</div>
+                    <div style="color:#bbb;font-size:0.9rem;line-height:1.6;">AI Smoothing bidikan di-adjust agar
+                        kelihatan sangat natural, sehingga manual review dari Anti-Cheat tak dapat membedakannya dengan
+                        pemain asli.</div>
                 </div>
                 <div class="timeline-node">
-                    <span style="background:rgba(255,255,255,0.1);color:#ccc;padding:4px 12px;border-radius:4px;font-size:0.75rem;font-weight:bold;margin-bottom:8px;display:inline-block;">v4.0.0 - 10 Januari 2026</span>
-                    <div style="color:#fff;font-weight:bold;font-size:1.1rem;margin-bottom:6px;">Modul HUD Transparan Premium</div>
-                    <div style="color:#bbb;font-size:0.9rem;line-height:1.6;">Tampilan HUD dalam game sekarang mendukung glassmorphism transparan sepenuhnya. Tool Reset HWID juga disematkan.</div>
+                    <span
+                        style="background:rgba(255,255,255,0.1);color:#ccc;padding:4px 12px;border-radius:4px;font-size:0.75rem;font-weight:bold;margin-bottom:8px;display:inline-block;">v4.0.0
+                        - 10 Januari 2026</span>
+                    <div style="color:#fff;font-weight:bold;font-size:1.1rem;margin-bottom:6px;">Modul HUD Transparan
+                        Premium</div>
+                    <div style="color:#bbb;font-size:0.9rem;line-height:1.6;">Tampilan HUD dalam game sekarang mendukung
+                        glassmorphism transparan sepenuhnya. Tool Reset HWID juga disematkan.</div>
                 </div>
             </div>
         </div>
