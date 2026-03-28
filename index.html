@@ -3281,7 +3281,10 @@
 
                     if (success) {
                         gate.classList.add('hidden');
+                        gate.style.display = 'none'; // Pastikan benar-benar tersembunyi
+                        gate.style.pointerEvents = 'none'; // Hilangkan interaksi
                         retryButton.removeEventListener('click', clickHandler);
+                        window.scrollTo(0, 0); // Scroll ke atas halaman
                         resolve(true);
                     }
                 };
