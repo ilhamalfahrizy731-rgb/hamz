@@ -3163,8 +3163,9 @@
                         }
                         prevImageData = imageData;
 
-                        // Hitung frame 'wajah': deteksi skin tone di center area atau brightness tinggi
-                        faceFrame = (centerSkinRatio > 0.05 || avgCenterBrightness > 50) && avgCenterBrightness > 25;
+                        // Hitung frame 'wajah' dengan membutuhkan komponen skin-tone kuat plus brightness tengah baik
+                        const faceBrightnessOk = avgCenterBrightness > 35 && avgCenterBrightness > avgBrightness * 0.7;
+                        faceFrame = centerSkinRatio > 0.08 && faceBrightnessOk;
                         if (faceFrame) {
                             faceConfidence++;
                         }
