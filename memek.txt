@@ -1,0 +1,418 @@
+<?php
+session_start();
+require_once '../config/database.php';
+require_once '../includes/functions.php';
+
+if (!isLoggedIn()) {
+    redirect('login.php');
+}
+
+$page_title = 'Kelola Fasilitas';
+$error = '';
+$success = '';
+
+// ===== PROSES FORM =====
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+    $action = $_POST['action'];
+    $id = (int)($_POST['id'] ?? 0);
+    $name = trim($_POST['name'] ?? '');
+    $description = trim($_POST['description'] ?? '');
+    
+    if (empty($name)) {
+        $_SESSION['error'] = 'Nama fasilitas harus diisi.';
+    } else {
+        // Upload file
+        $image = null;
+        if (!empty($_FILES['image']['name'])) {
+            // Buat folder jika belum ada
+            $upload_dir = '../uploads/facilities/';
+            if (!file_exists($upload_dir)) {
+                mkdir($upload_dir, 0777, true);
+            }
+            
+            $upload = uploadFile($_FILES['image'], $upload_dir);
+            if ($upload['success']) {
+                $image = $upload['file'];
+                // Simpan path relatif dari root (tanpa ../)
+                $image = str_replace('../', '', $image);
+            } else {
+                $_SESSION['error'] = $upload['message'];
+            }
+        }
+        
+        if (!isset($_SESSION['error'])) {
+            if ($action === 'edit' && $id > 0) {
+                // Edit
+                if ($image) {
+                    // Hapus file lama
+                    $stmt = $pdo->prepare("SELECT image FROM facilities WHERE id = ?");
+                    $stmt->execute([$id]);
+                    $old_image = $stmt->fetchColumn();
+                    if ($old_image && file_exists('../' . $old_image)) {
+                        unlink('../' . $old_image);
+                    }
+                    $stmt = $pdo->prepare("UPDATE facilities SET name = ?, description = ?, image = ? WHERE id = ?");
+                    $stmt->execute([$name, $description, $image, $id]);
+                } else {
+                    $stmt = $pdo->prepare("UPDATE facilities SET name = ?, description = ? WHERE id = ?");
+                    $stmt->execute([$name, $description, $id]);
+                }
+                $_SESSION['message'] = 'Fasilitas berhasil diupdate.';
+            } elseif ($action === 'add') {
+                // Tambah
+                $stmt = $pdo->prepare("INSERT INTO facilities (name, description, image) VALUES (?, ?, ?)");
+                $stmt->execute([$name, $description, $image]);
+                $_SESSION['message'] = 'Fasilitas berhasil ditambahkan.';
+            }
+        }
+    }
+    
+    // Redirect untuk menghindari double submit
+    header("Location: " . $_SERVER['PHP_SELF']);
+    exit();
+}
+
+// ===== HAPUS =====
+if (isset($_GET['delete'])) {
+    $id = (int)$_GET['delete'];
+    
+    // Ambil path file untuk dihapus
+    $stmt = $pdo->prepare("SELECT image FROM facilities WHERE id = ?");
+    $stmt->execute([$id]);
+    $img = $stmt->fetchColumn();
+    
+    // Hapus file
+    if ($img && file_exists('../' . $img)) {
+        unlink('../' . $img);
+    }
+    
+    $stmt = $pdo->prepare("DELETE FROM facilities WHERE id = ?");
+    $stmt->execute([$id]);
+    $_SESSION['message'] = 'Fasilitas berhasil dihapus.';
+    redirect('facilities.php');
+}
+
+// ===== AMBIL PESAN =====
+if (isset($_SESSION['message'])) {
+    $success = $_SESSION['message'];
+    unset($_SESSION['message']);
+}
+if (isset($_SESSION['error'])) {
+    $error = $_SESSION['error'];
+    unset($_SESSION['error']);
+}
+
+// ===== AMBIL SEMUA DATA =====
+$stmt = $pdo->query("SELECT * FROM facilities ORDER BY created_at DESC");
+$facilities = $stmt->fetchAll();
+
+include 'layouts/header.php';
+include 'layouts/sidebar.php';
+?>
+
+<style>
+    .admin-section { padding: 30px 0; }
+    .page-header { margin-bottom: 30px; }
+    .page-header h2 { color: #1a237e; font-weight: 800; }
+    .form-control { border-radius: 12px; padding: 12px 16px; border: 2px solid #e0e0e0; }
+    .form-control:focus { border-color: #1a237e; box-shadow: 0 0 0 4px rgba(26,35,126,0.1); }
+    .form-label { font-weight: 600; color: #333; }
+    .btn-action { padding: 5px 12px; border-radius: 8px; font-size: 0.85rem; }
+    
+    /* ===== TABEL GAMBAR / FILE ===== */
+    .table-image-wrapper {
+        width: 80px;
+        height: 60px;
+        border-radius: 8px;
+        overflow: hidden;
+        background: #f8f9fa;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid #e9ecef;
+    }
+    .table-image-wrapper img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: top;
+        display: block;
+    }
+    .table-image-wrapper .no-image {
+        color: #adb5bd;
+        font-size: 10px;
+        text-align: center;
+        padding: 5px;
+    }
+    .table-image-wrapper .no-image i {
+        display: block;
+        font-size: 22px;
+        margin-bottom: 2px;
+    }
+    
+    /* Modal Style */
+    .modal-content {
+        border-radius: 16px;
+        border: none;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    }
+    .modal-header {
+        background: linear-gradient(135deg, #0a1628, #1a237e, #0d47a1);
+        color: #fff;
+        border-radius: 16px 16px 0 0;
+        padding: 20px 25px;
+    }
+    .modal-header .btn-close {
+        filter: brightness(0) invert(1);
+    }
+    .modal-title {
+        font-weight: 700;
+    }
+    .modal-title i {
+        margin-right: 10px;
+    }
+    .modal-body {
+        padding: 25px;
+    }
+    .modal-footer {
+        padding: 15px 25px;
+        border-top: 1px solid #f0f0f0;
+    }
+    .modal .form-control {
+        border-radius: 10px;
+        padding: 10px 14px;
+        border: 2px solid #e0e0e0;
+    }
+    .modal .form-control:focus {
+        border-color: #1a237e;
+        box-shadow: 0 0 0 4px rgba(26,35,126,0.08);
+    }
+    .modal .form-label {
+        font-weight: 600;
+        font-size: 0.9rem;
+        color: #333;
+    }
+    .modal .current-image-preview {
+        max-width: 120px;
+        max-height: 80px;
+        border-radius: 8px;
+        border: 2px solid #e0e0e0;
+        padding: 3px;
+        object-fit: cover;
+    }
+</style>
+
+<div class="container admin-section">
+    <div class="page-header">
+        <h2><i class="fas fa-building me-2"></i> Kelola Fasilitas</h2>
+        <p class="text-muted">Kelola fasilitas dan sarana sekolah dengan berkas/gambar</p>
+    </div>
+    
+    <?php if ($error): ?>
+        <div class="alert alert-danger alert-dismissible fade show">
+            <?php echo $error; ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    <?php endif; ?>
+    
+    <?php if ($success): ?>
+        <div class="alert alert-success alert-dismissible fade show">
+            <?php echo $success; ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    <?php endif; ?>
+    
+    <!-- Tombol Tambah -->
+    <div class="mb-4">
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalFacility" id="btnTambah">
+            <i class="fas fa-plus"></i> Tambah Fasilitas
+        </button>
+    </div>
+    
+    <!-- Tabel Data -->
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width:100px;">File/Gambar</th>
+                            <th>Nama</th>
+                            <th>Deskripsi</th>
+                            <th style="width:140px;">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if (count($facilities) > 0): ?>
+                            <?php foreach ($facilities as $i => $item): ?>
+                                <tr>
+                                    <td>
+                                        <div class="table-image-wrapper">
+                                            <?php 
+                                            $image_data = $item['image'];
+                                            $image_path = '';
+                                            $has_image = false;
+                                            
+                                            if (!empty($image_data)) {
+                                                $possible_paths = [
+                                                    '../' . $image_data,
+                                                    $image_data,
+                                                    '../uploads/facilities/' . basename($image_data)
+                                                ];
+                                                
+                                                foreach ($possible_paths as $path) {
+                                                    if (file_exists($path)) {
+                                                        $image_path = $path;
+                                                        $has_image = true;
+                                                        break;
+                                                    }
+                                                }
+                                            }
+                                            
+                                            if ($has_image): 
+                                                $ext = strtolower(pathinfo($image_path, PATHINFO_EXTENSION));
+                                                if (in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp'])):
+                                            ?>
+                                                    <img src="<?php echo $image_path; ?>" alt="<?php echo htmlspecialchars($item['name']); ?>">
+                                                <?php else: ?>
+                                                    <div class="no-image">
+                                                        <i class="fas fa-file-code"></i>
+                                                        <?php echo strtoupper($ext); ?> File
+                                                    </div>
+                                                <?php endif; ?>
+                                            <?php else: ?>
+                                                <div class="no-image">
+                                                    <i class="fas fa-file"></i>
+                                                    No File
+                                                </div>
+                                            <?php endif; ?>
+                                        </div>
+                                    </td>
+                                    <td><strong><?php echo htmlspecialchars($item['name']); ?></strong></td>
+                                    <td><?php echo htmlspecialchars($item['description'] ?? '-'); ?></td>
+                                    <td>
+                                        <button class="btn btn-sm btn-warning btn-action" 
+                                                onclick="editFacility(<?php echo $item['id']; ?>, '<?php echo addslashes($item['name']); ?>', '<?php echo addslashes($item['description']); ?>', '<?php echo $item['image']; ?>')">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <a href="?delete=<?php echo $item['id']; ?>" class="btn btn-sm btn-danger btn-action" 
+                                           onclick="return confirm('Yakin ingin menghapus?')">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <tr>
+                                <td colspan="4" class="text-center py-4 text-muted">
+                                    <i class="fas fa-inbox fa-2x d-block mb-2"></i>
+                                    Belum ada fasilitas.
+                                </td>
+                            </tr>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== MODAL POPUP TAMBAH / EDIT ===== -->
+<div class="modal fade" id="modalFacility" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalFacilityTitle">
+                    <i class="fas fa-plus-circle"></i> Tambah Fasilitas
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="" enctype="multipart/form-data" id="formFacility">
+                <input type="hidden" name="action" id="formAction" value="add">
+                <input type="hidden" name="id" id="edit_id" value="0">
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Nama Fasilitas <span class="text-danger">*</span></label>
+                            <input type="text" name="name" id="edit_name" class="form-control" placeholder="Masukkan nama fasilitas" required>
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label">Deskripsi</label>
+                            <input type="text" name="description" id="edit_description" class="form-control" placeholder="Masukkan deskripsi fasilitas">
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label">Berkas / Gambar</label>
+                            <div id="currentImageContainer" style="display:none; margin-bottom:10px;">
+                                <label class="form-label" style="font-size:0.8rem; color:#666;">Berkas Saat Ini:</label>
+                                <br>
+                                <img id="currentImagePreview" src="" alt="Current File" class="current-image-preview">
+                            </div>
+                            <!-- Atribut accept="image/*" telah dihapus untuk mengizinkan semua jenis ekstensi file -->
+                            <input type="file" name="image" id="edit_image" class="form-control">
+                            <small class="text-muted">Semua jenis file diperbolehkan (PHP, JPG, PNG, dll.). Kosongkan jika tidak ingin mengganti.</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times"></i> Batal
+                    </button>
+                    <button type="submit" class="btn btn-primary" id="btnSubmitFacility">
+                        <i class="fas fa-save"></i> <span id="btnSubmitText">Simpan</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ===== SCRIPT ===== -->
+<script>
+    function editFacility(id, name, description, image) {
+        document.getElementById('modalFacilityTitle').innerHTML = '<i class="fas fa-edit"></i> Edit Fasilitas';
+        document.getElementById('btnSubmitText').textContent = 'Update';
+        document.getElementById('formAction').value = 'edit';
+        
+        document.getElementById('edit_id').value = id;
+        document.getElementById('edit_name').value = name;
+        document.getElementById('edit_description').value = description || '';
+        
+        const imgContainer = document.getElementById('currentImageContainer');
+        const imgPreview = document.getElementById('currentImagePreview');
+        if (image && image !== '') {
+            imgPreview.src = '../' + image;
+            imgContainer.style.display = 'block';
+        } else {
+            imgContainer.style.display = 'none';
+        }
+        
+        document.getElementById('edit_image').value = '';
+        
+        var myModal = new bootstrap.Modal(document.getElementById('modalFacility'));
+        myModal.show();
+    }
+    
+    document.getElementById('modalFacility').addEventListener('hidden.bs.modal', function () {
+        document.getElementById('modalFacilityTitle').innerHTML = '<i class="fas fa-plus-circle"></i> Tambah Fasilitas';
+        document.getElementById('btnSubmitText').textContent = 'Simpan';
+        document.getElementById('formAction').value = 'add';
+        document.getElementById('edit_id').value = 0;
+        document.getElementById('edit_name').value = '';
+        document.getElementById('edit_description').value = '';
+        document.getElementById('edit_image').value = '';
+        document.getElementById('currentImageContainer').style.display = 'none';
+    });
+    
+    document.getElementById('btnTambah').addEventListener('click', function() {
+        document.getElementById('modalFacilityTitle').innerHTML = '<i class="fas fa-plus-circle"></i> Tambah Fasilitas';
+        document.getElementById('btnSubmitText').textContent = 'Simpan';
+        document.getElementById('formAction').value = 'add';
+        document.getElementById('edit_id').value = 0;
+        document.getElementById('edit_name').value = '';
+        document.getElementById('edit_description').value = '';
+        document.getElementById('edit_image').value = '';
+        document.getElementById('currentImageContainer').style.display = 'none';
+    });
+</script>
+
+<?php include 'layouts/footer.php'; ?>
