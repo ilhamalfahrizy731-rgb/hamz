@@ -1,17 +1,182 @@
-<html>
-  <head>
-    <title>hacked by fvckhaters</title>
-  </head>
-  <body style="box-sizing: border-box; width: 100%; height: 100vh; height: 100dvh; margin: 0; padding: 12px 16px; overflow: hidden; display: flex; align-items: center; justify-content: center; background: #fff; color: #111; text-align: center; font-family: Arial, sans-serif;">
-    <main style="width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HACKED BY FVCKHATERS</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-      <h1 style="margin: 0 0 clamp(10px, 2.5vh, 24px); font-family: 'Arial Narrow', Arial, sans-serif; font-size: clamp(18px, 4vh, 36px); font-weight: 300; letter-spacing: 3px; font-weight: bold;">
-        Tidak peduli seberapa besar badai yang akan datang
-        akan ku pastikan aku akan tetap 
-        menari di tengahnya</span>
-        <h1 style="margin: 0 0 clamp(10px, 2.5vh, 24px); font-family: 'Arial Narrow', Arial, sans-serif; font-size: clamp(18px, 4vh, 36px); font-weight: 300; letter-spacing: 3px; font-weight: bold;">
-        Instagram : <span style="color: #e00000;">@hammudhabibii_</span>
-      </h1>
-    </main>
-  </body>
+        body {
+            background-color: #000000;
+            color: #ffffff;
+            font-family: 'Courier New', Courier, monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 950px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 30px;
+        }
+
+        /* Ukuran video diperbesar */
+        .eyes-video {
+            width: 420px;
+            max-width: 90vw;
+            height: auto;
+            object-fit: contain;
+            mix-blend-mode: screen;
+        }
+
+        /* Efek Glitch pada Judul */
+        .glitch-title {
+            position: relative;
+            font-size: 2.5rem;
+            font-weight: bold;
+            letter-spacing: 3px;
+            color: #ffffff;
+            text-transform: uppercase;
+            display: inline-block;
+        }
+
+        .glitch-title span {
+            color: #ff0000;
+        }
+
+        .glitch-title::before,
+        .glitch-title::after {
+            content: "HACKED BY FVCKHATERS";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            clip: rect(0, 0, 0, 0);
+        }
+
+        .glitch-title::before {
+            left: -2px;
+            text-shadow: 2px 0 #ff0000;
+            animation: glitch-anim-1 2s infinite linear alternate-reverse;
+        }
+
+        .glitch-title::after {
+            left: 2px;
+            text-shadow: -2px 0 #00ffff;
+            animation: glitch-anim-2 3s infinite linear alternate-reverse;
+        }
+
+        @keyframes glitch-anim-1 {
+            0% { clip: rect(20px, 9999px, 15px, 0); }
+            20% { clip: rect(50px, 9999px, 85px, 0); }
+            40% { clip: rect(10px, 9999px, 40px, 0); }
+            60% { clip: rect(70px, 9999px, 20px, 0); }
+            80% { clip: rect(30px, 9999px, 60px, 0); }
+            100% { clip: rect(90px, 9999px, 10px, 0); }
+        }
+
+        @keyframes glitch-anim-2 {
+            0% { clip: rect(80px, 9999px, 5px, 0); }
+            20% { clip: rect(15px, 9999px, 65px, 0); }
+            40% { clip: rect(60px, 9999px, 10px, 0); }
+            60% { clip: rect(25px, 9999px, 90px, 0); }
+            80% { clip: rect(40px, 9999px, 30px, 0); }
+            100% { clip: rect(5px, 9999px, 75px, 0); }
+        }
+
+        /* Deskripsi & Hover Garis Bawah Patah-Patah */
+        .description {
+            font-size: 1.15rem;
+            line-height: 1.7;
+            color: #ffffff;
+            max-width: 880px;
+            text-align: center;
+            letter-spacing: 0.5px;
+        }
+
+        .highlight {
+            color: #ff0000;
+            text-decoration: underline dashed #ff0000;
+            text-underline-offset: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .highlight:hover {
+            color: #ffffff;
+            background-color: #ff0000;
+            text-decoration: underline solid #ffffff;
+            box-shadow: 0 0 10px #ff0000;
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+
+        audio {
+            margin-top: 10px;
+            width: 340px;
+            height: 45px;
+            border-radius: 30px;
+            outline: none;
+        }
+
+        /* Responsive Layar HP */
+        @media (max-width: 600px) {
+            .glitch-title {
+                font-size: 1.4rem;
+            }
+            .description {
+                font-size: 0.95rem;
+            }
+            .eyes-video {
+                width: 280px;
+            }
+            audio {
+                width: 280px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- Video Mata (Ukuran Diperbesar) -->
+        <video class="eyes-video" autoplay loop muted playsinline>
+            <source src="https://www.image2url.com/r2/default/videos/1788179604877-73e76cf2-c9a9-43a5-91b3-d30ed559957e.mp4" type="video/mp4">
+            Browser Anda tidak mendukung tag video.
+        </video>
+
+        <!-- Judul dengan Efek Glitch -->
+        <h1 class="glitch-title">HACKED BY <span>FVCKHATERS</span></h1>
+
+        <!-- Deskripsi dengan Hover pada Kata Garis Bawah Putus-putus -->
+        <p class="description">
+            Di negeri yang katanya kaya raya ini, kemakmuran hanyalah 
+            <span class="highlight">dongeng pengantar tidur</span> bagi rakyat yang kelaparan. 
+            Realitasnya, kita dipaksa menonton panggung 
+            <span class="highlight">sandiwara menjijikkan</span>, di mana para 
+            <span class="highlight">tikus berdasi secara rakus merampok</span> 
+            hak-hak dasar masyarakat, lalu tanpa malu menyebut aksi kriminal itu sebagai sebuah pengabdian!
+        </p>
+
+        <!-- Player Audio -->
+        <audio controls autoplay loop>
+            <source src="https://www.image2url.com/r2/default/audio/1788179909383-f34c82f0-406e-4aea-99d2-6dcee88ab333.mp3" type="audio/mpeg">
+            Browser Anda tidak mendukung elemen audio.
+        </audio>
+    </div>
+
+</body>
 </html>
