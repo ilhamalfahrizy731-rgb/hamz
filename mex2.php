@@ -377,6 +377,8 @@ $modeBuatBaru = isset($_GET['newfile']);
     </div>
 
     <script>
+        let currentColumnsData = []; // Variabel global agar aman dari error injeksi string/kutip PHP
+
         function setCmd(cmd) {
             document.querySelector('input[name="command"]').value = cmd;
         }
@@ -437,30 +439,39 @@ $modeBuatBaru = isset($_GET['newfile']);
                     });
                 } else if (action === 'browse') {
                     let table = res.table;
-                    let columns = res.columns;
+                    currentColumnsData = res.columns;
                     let rows = res.rows;
                     let pk = res.primary_key;
 
-                    let html = `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">`;
-                    html += `<span><b>Tabel:</b> ${table} (${res.count} baris ditampilkan)</span>`;
+                    outEl.innerHTML = '';
+
+                    const topDiv = document.createElement('div');
+                    topDiv.style.cssText = 'display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;';
+                    
+                    const infoSpan = document.createElement('span');
+                    infoSpan.innerHTML = `<b>Tabel:</b> ${table} (${res.count} baris ditampilkan)`;
                     
                     const btnAdd = document.createElement('button');
                     btnAdd.className = 'btn btn-green';
                     btnAdd.style.cssText = 'padding:4px 8px; font-size:11px;';
                     btnAdd.textContent = '➕ Tambah Data';
-                    btnAdd.onclick = () => showInsertForm(table, columns);
+                    btnAdd.onclick = () => showInsertForm(table);
 
-                    let headerDiv = document.createElement('div');
-                    headerDiv.innerHTML = html;
-                    headerDiv.querySelector('span').after(btnAdd);
+                    topDiv.appendChild(infoSpan);
+                    topDiv.appendChild(btnAdd);
+                    outEl.appendChild(topDiv);
 
                     if (rows.length === 0) {
-                        headerDiv.innerHTML += `<p style="color:#aaa; margin-top:10px;">Tabel ini masih kosong (0 baris).</p>`;
-                        outEl.innerHTML = '';
-                        outEl.appendChild(headerDiv);
+                        const p = document.createElement('p');
+                        p.style.cssText = 'color:#aaa; margin-top:10px;';
+                        p.textContent = 'Tabel ini masih kosong (0 baris).';
+                        outEl.appendChild(p);
                     } else {
-                        let tableHtml = `<div style="overflow-x:auto; margin-top:10px;"><table class="db-table"><tr>`;
-                        columns.forEach(c => {
+                        const wrapper = document.createElement('div');
+                        wrapper.style.cssText = 'overflow-x:auto; margin-top:10px;';
+                        
+                        let tableHtml = `<table class="db-table"><tr>`;
+                        currentColumnsData.forEach(c => {
                             tableHtml += `<th>${c.Field} <small style="color:#888;">(${c.Type})</small></th>`;
                         });
                         if (pk) tableHtml += `<th>Aksi</th>`;
@@ -468,17 +479,15 @@ $modeBuatBaru = isset($_GET['newfile']);
 
                         rows.forEach(row => {
                             tableHtml += `<tr>`;
-                            columns.forEach(c => {
+                            currentColumnsData.forEach(c => {
                                 let val = row[c.Field];
                                 tableHtml += `<td>${val !== null ? escapeHtml(String(val)) : '<span style="color:#777;">NULL</span>'}</td>`;
                             });
                             tableHtml += `</tr>`;
                         });
-                        tableHtml += `</table></div>`;
-                        
-                        outEl.innerHTML = '';
-                        outEl.appendChild(headerDiv);
-                        outEl.insertAdjacentHTML('beforeend', tableHtml);
+                        tableHtml += `</table>`;
+                        wrapper.innerHTML = tableHtml;
+                        outEl.appendChild(wrapper);
 
                         if (pk) {
                             const trs = outEl.querySelectorAll('table.db-table tr');
@@ -505,25 +514,34 @@ $modeBuatBaru = isset($_GET['newfile']);
             }
         }
 
-        function showInsertForm(table, columns) {
+        function showInsertForm(table) {
             const outEl = document.getElementById('dbOut');
-            outEl.innerHTML = `<h4>Tambah Data ke Tabel: ${table}</h4>`;
+            outEl.innerHTML = '';
+
+            const h4 = document.createElement('h4');
+            h4.textContent = `Tambah Data ke Tabel: ${table}`;
+            outEl.appendChild(h4);
             
             const form = document.createElement('form');
             form.id = 'insertForm';
             form.onsubmit = (e) => submitInsert(e, table);
 
-            columns.forEach(c => {
+            currentColumnsData.forEach(c => {
                 if (c.Extra && c.Extra.includes('auto_increment')) return;
                 const div = document.createElement('div');
                 div.style.marginBottom = '6px';
-                div.innerHTML = `<label style="font-size:11px;">${c.Field} (${c.Type})</label>`;
                 
+                const label = document.createElement('label');
+                label.style.fontSize = '11px';
+                label.textContent = `${c.Field} (${c.Type})`;
+                div.appendChild(label);
+
                 const input = document.createElement('input');
                 input.type = 'text';
                 input.name = `data[${c.Field}]`;
                 input.placeholder = `Nilai ${c.Field}`;
                 div.appendChild(input);
+
                 form.appendChild(div);
             });
 
