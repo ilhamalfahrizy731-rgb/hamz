@@ -424,12 +424,17 @@ $modeBuatBaru = isset($_GET['newfile']);
                         outEl.textContent = 'Database terhubung, tetapi belum ada tabel di dalamnya.';
                         return;
                     }
-                    let html = '<b>Daftar Tabel (Klik untuk buka):</b><br><div style="margin-top:8px;">';
+                    
+                    outEl.innerHTML = '<b>Daftar Tabel (Klik untuk buka):</b><br><div id="tableBadgeContainer" style="margin-top:8px;"></div>';
+                    const container = document.getElementById('tableBadgeContainer');
+                    
                     res.tables.forEach(t => {
-                        html += `<span class="table-list-badge" onclick="dbAction('browse', {db_table: '${t}'})">🗄️ ${t}</span>`;
+                        const badge = document.createElement('span');
+                        badge.className = 'table-list-badge';
+                        badge.innerHTML = '🗄️ ' + t;
+                        badge.onclick = () => dbAction('browse', { db_table: t });
+                        container.appendChild(badge);
                     });
-                    html += '</div>';
-                    outEl.innerHTML = html;
                 } else if (action === 'browse') {
                     let table = res.table;
                     let columns = res.columns;
@@ -438,33 +443,59 @@ $modeBuatBaru = isset($_GET['newfile']);
 
                     let html = `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">`;
                     html += `<span><b>Tabel:</b> ${table} (${res.count} baris ditampilkan)</span>`;
-                    html += `<button class="btn btn-green" style="padding:4px 8px; font-size:11px;" onclick="showInsertForm('${table}', ${JSON.stringify(columns).replace(/"/g, '"')})">➕ Tambah Data</button>`;
-                    html += `</div>`;
+                    
+                    const btnAdd = document.createElement('button');
+                    btnAdd.className = 'btn btn-green';
+                    btnAdd.style.cssText = 'padding:4px 8px; font-size:11px;';
+                    btnAdd.textContent = '➕ Tambah Data';
+                    btnAdd.onclick = () => showInsertForm(table, columns);
+
+                    let headerDiv = document.createElement('div');
+                    headerDiv.innerHTML = html;
+                    headerDiv.querySelector('span').after(btnAdd);
 
                     if (rows.length === 0) {
-                        html += `<p style="color:#aaa;">Tabel ini masih kosong (0 baris).</p>`;
+                        headerDiv.innerHTML += `<p style="color:#aaa; margin-top:10px;">Tabel ini masih kosong (0 baris).</p>`;
+                        outEl.innerHTML = '';
+                        outEl.appendChild(headerDiv);
                     } else {
-                        html += `<div style="overflow-x:auto;"><table class="db-table"><tr>`;
+                        let tableHtml = `<div style="overflow-x:auto; margin-top:10px;"><table class="db-table"><tr>`;
                         columns.forEach(c => {
-                            html += `<th>${c.Field} <small style="color:#888;">(${c.Type})</small></th>`;
+                            tableHtml += `<th>${c.Field} <small style="color:#888;">(${c.Type})</small></th>`;
                         });
-                        if (pk) html += `<th>Aksi</th>`;
-                        html += `</tr>`;
+                        if (pk) tableHtml += `<th>Aksi</th>`;
+                        tableHtml += `</tr>`;
 
                         rows.forEach(row => {
-                            html += `<tr>`;
+                            tableHtml += `<tr>`;
                             columns.forEach(c => {
                                 let val = row[c.Field];
-                                html += `<td>${val !== null ? escapeHtml(String(val)) : '<span style="color:#777;">NULL</span>'}</td>`;
+                                tableHtml += `<td>${val !== null ? escapeHtml(String(val)) : '<span style="color:#777;">NULL</span>'}</td>`;
                             });
-                            if (pk) {
-                                html += `<td><button class="btn btn-red" style="padding:2px 6px; font-size:10px;" onclick="deleteRow('${table}', '${pk}', '${row[pk]}')">Hapus</button></td>`;
-                            }
-                            html += `</tr>`;
+                            tableHtml += `</tr>`;
                         });
-                        html += `</table></div>`;
+                        tableHtml += `</table></div>`;
+                        
+                        outEl.innerHTML = '';
+                        outEl.appendChild(headerDiv);
+                        outEl.insertAdjacentHTML('beforeend', tableHtml);
+
+                        if (pk) {
+                            const trs = outEl.querySelectorAll('table.db-table tr');
+                            trs.forEach((tr, index) => {
+                                if (index === 0) return;
+                                const rowData = rows[index - 1];
+                                const tdAction = document.createElement('td');
+                                const delBtn = document.createElement('button');
+                                delBtn.className = 'btn btn-red';
+                                delBtn.style.cssText = 'padding:2px 6px; font-size:10px;';
+                                delBtn.textContent = 'Hapus';
+                                delBtn.onclick = () => deleteRow(table, pk, rowData[pk]);
+                                tdAction.appendChild(delBtn);
+                                tr.appendChild(tdAction);
+                            });
+                        }
                     }
-                    outEl.innerHTML = html;
                 } else if (res.message) {
                     outEl.textContent = res.message;
                 }
@@ -475,17 +506,43 @@ $modeBuatBaru = isset($_GET['newfile']);
         }
 
         function showInsertForm(table, columns) {
-            let html = `<h4>Tambah Data ke Tabel: ${table}</h4>`;
-            html += `<form id="insertForm" onsubmit="submitInsert(event, '${table}')">`;
+            const outEl = document.getElementById('dbOut');
+            outEl.innerHTML = `<h4>Tambah Data ke Tabel: ${table}</h4>`;
+            
+            const form = document.createElement('form');
+            form.id = 'insertForm';
+            form.onsubmit = (e) => submitInsert(e, table);
+
             columns.forEach(c => {
-                if (c.Extra && c.Extra.includes('auto_increment')) return; // Skip auto increment
-                html += `<div style="margin-bottom:6px;"><label style="font-size:11px;">${c.Field} (${c.Type})</label>`;
-                html += `<input type="text" name="data[${c.Field}]" placeholder="Nilai ${c.Field}"></div>`;
+                if (c.Extra && c.Extra.includes('auto_increment')) return;
+                const div = document.createElement('div');
+                div.style.marginBottom = '6px';
+                div.innerHTML = `<label style="font-size:11px;">${c.Field} (${c.Type})</label>`;
+                
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.name = `data[${c.Field}]`;
+                input.placeholder = `Nilai ${c.Field}`;
+                div.appendChild(input);
+                form.appendChild(div);
             });
-            html += `<button type="submit" class="btn btn-green" style="margin-top:5px;">Simpan Data Baru</button> `;
-            html += `<button type="button" class="btn" style="background:#555;" onclick="dbAction('browse', {db_table: '${table}'})">Batal</button>`;
-            html += `</form>`;
-            document.getElementById('dbOut').innerHTML = html;
+
+            const submitBtn = document.createElement('button');
+            submitBtn.type = 'submit';
+            submitBtn.className = 'btn btn-green';
+            submitBtn.style.marginTop = '5px';
+            submitBtn.textContent = 'Simpan Data Baru';
+
+            const cancelBtn = document.createElement('button');
+            cancelBtn.type = 'button';
+            cancelBtn.className = 'btn';
+            cancelBtn.style.cssText = 'background:#555; margin-left:5px;';
+            cancelBtn.textContent = 'Batal';
+            cancelBtn.onclick = () => dbAction('browse', { db_table: table });
+
+            form.appendChild(submitBtn);
+            form.appendChild(cancelBtn);
+            outEl.appendChild(form);
         }
 
         async function submitInsert(e, table) {
@@ -497,7 +554,6 @@ $modeBuatBaru = isset($_GET['newfile']);
                 extra[key] = value;
             }
             await dbAction('insert', extra);
-            // Refresh table view
             dbAction('browse', { db_table: table });
         }
 
@@ -508,7 +564,6 @@ $modeBuatBaru = isset($_GET['newfile']);
                 pk_field: pkField,
                 pk_value: pkValue
             });
-            // Refresh table view
             dbAction('browse', { db_table: table });
         }
 
